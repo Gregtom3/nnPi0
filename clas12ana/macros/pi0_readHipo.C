@@ -14,8 +14,8 @@ void DeleteParticlePointers(type_map_part& map){
   }
   return;
 }
-int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/45nA_job_3053_1.hipo",
-		const char * outputFile = "MC_3053_1.root",
+int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/45nA_job_3053_2.hipo",
+		const char * outputFile = "MC_3053_2.root",
 		const double _electron_beam_energy = 10.6,
 		const int maxEvents = 10000,
 		bool hipo_is_mc = true){
@@ -167,7 +167,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   int whileidx=0;
   while(_chain.Next()==true && (whileidx < maxEvents || maxEvents < 0)){
     if(whileidx%10000==0 && whileidx!=0){
-      std::cout << _ievent << " events completed " << std::endl;
+      std::cout << whileidx << " events read | " << _ievent*100.0/whileidx << "% passed event selection" << std::endl;
     }
 
     whileidx++;
@@ -193,6 +193,8 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
       auto particle = particles.at(idx);
       int pid = particle->getPid();      
       float chi2 = particle->getChi2Pid();
+      if(chi2>100 || chi2<-100)
+	chi2=0;
       float theta = particle->getTheta();
       float eta = _kin.eta(theta);
       float phi = particle->getPhi();
@@ -435,19 +437,20 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
     // Find the scattered electron
     TLorentzVector e;
     int idx_e=0;
-    for(unsigned int i = 0; i < recoParticleMap.size() ; i++){
-      int pid = recoParticleMap[i]->get_property_int(SIDISParticle::part_pid);
+    for (type_map_part::iterator it_reco = recoParticleMap.begin(); it_reco!= recoParticleMap.end(); ++it_reco){
+      int pid = (it_reco->second)->get_property_int(SIDISParticle::part_pid);
       if(pid==11){
-	double px = recoParticleMap[i]->get_property_float(SIDISParticle::part_px);
-	double py = recoParticleMap[i]->get_property_float(SIDISParticle::part_py);
-	double pz = recoParticleMap[i]->get_property_float(SIDISParticle::part_pz);
-	double E = recoParticleMap[i]->get_property_float(SIDISParticle::part_E);
+	double px =  (it_reco->second)->get_property_float(SIDISParticle::part_px);
+	double py =  (it_reco->second)->get_property_float(SIDISParticle::part_py);
+	double pz =  (it_reco->second)->get_property_float(SIDISParticle::part_pz);
+	double E =  (it_reco->second)->get_property_float(SIDISParticle::part_E);
 	e.SetPxPyPzE(px,py,pz,E);
 	foundEle=true;
-	idx_e=i;
 	break;
       }
+      idx_e++;
     }
+      
       
     // Loop over all recoParticles and fill TTree
     _nPart=0;

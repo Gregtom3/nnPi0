@@ -42,26 +42,38 @@ type_map_part PID::applyCuts(type_map_part& map){
 
     TLorentzVector part(px,py,pz,E);
     float angle_e = part.Angle(e.Vect())*180/3.14159265;
-
+    
+    bool deleteParticle=false;
     // Toss photons near electron (radiative)
     if(pid == 22 && angle_e<8)
-      continue;
-    
+      deleteParticle=true;
+
     // Toss low energy photons
     if(pid == 22 && E<0.2)
-      continue;
+      deleteParticle=true;
 
     // Toss bad electron vertex
     if(pid == 11 && (vz<-8 || vz>3))
-      continue;
+      deleteParticle=true;
+
+    // Toss odd PIDs
+    if(pid != 11 && pid != -11 && pid!=2212 && pid!=2112 && pid!=211 && pid!=-211 && pid!=22 && pid!=321 && pid!=-321)
+      deleteParticle=true;
 
     // Toss bad photon beta
     if(pid == 22 && (beta<0.9 || beta>1.1))
+      deleteParticle=true;
+
+    // Delete the particle if needed
+    if(deleteParticle){
+      delete(it->second);
+      map.erase(it);
       continue;
+    }
 
     // Insert particle into the retMap
     retMap.insert ( make_pair( (it->first) , (it->second)) );
-
+    
   }
   
   return retMap;

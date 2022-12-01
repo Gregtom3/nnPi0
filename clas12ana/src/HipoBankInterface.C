@@ -10,6 +10,15 @@ HipoBankInterface::HipoBankInterface(const std::unique_ptr<clas12::clas12reader>
   _ilu_RECCal = _c12->getBankOrder(_idx_RECCal,"lu");
   _ilv_RECCal = _c12->getBankOrder(_idx_RECCal,"lv");
   _ilw_RECCal = _c12->getBankOrder(_idx_RECCal,"lw");
+  _idu_RECCal = _c12->getBankOrder(_idx_RECCal,"du");
+  _idv_RECCal = _c12->getBankOrder(_idx_RECCal,"dv");
+  _idw_RECCal = _c12->getBankOrder(_idx_RECCal,"dw");
+  _im2u_RECCal = _c12->getBankOrder(_idx_RECCal,"m2u");
+  _im2v_RECCal = _c12->getBankOrder(_idx_RECCal,"m2v");
+  _im2w_RECCal = _c12->getBankOrder(_idx_RECCal,"m2w");
+  _im3u_RECCal = _c12->getBankOrder(_idx_RECCal,"m3u");
+  _im3v_RECCal = _c12->getBankOrder(_idx_RECCal,"m3v");
+  _im3w_RECCal = _c12->getBankOrder(_idx_RECCal,"m3w");
   _ilayer_RECCal = _c12->getBankOrder(_idx_RECCal,"layer");
   _isector_RECCal = _c12->getBankOrder(_idx_RECCal,"sector");
   _itime_RECCal = _c12->getBankOrder(_idx_RECCal,"time");
@@ -50,6 +59,15 @@ bool HipoBankInterface::loadBankData(const std::unique_ptr<clas12::clas12reader>
     float lu = _c12->getBank(_idx_RECCal)->getFloat(_ilu_RECCal,i);
     float lv = _c12->getBank(_idx_RECCal)->getFloat(_ilv_RECCal,i);
     float lw = _c12->getBank(_idx_RECCal)->getFloat(_ilw_RECCal,i);
+    float du = _c12->getBank(_idx_RECCal)->getFloat(_idu_RECCal,i);
+    float dv = _c12->getBank(_idx_RECCal)->getFloat(_idv_RECCal,i);
+    float dw = _c12->getBank(_idx_RECCal)->getFloat(_idw_RECCal,i);
+    float m2u = _c12->getBank(_idx_RECCal)->getFloat(_im2u_RECCal,i);
+    float m2v = _c12->getBank(_idx_RECCal)->getFloat(_im2v_RECCal,i);
+    float m2w = _c12->getBank(_idx_RECCal)->getFloat(_im2w_RECCal,i);
+    float m3u = _c12->getBank(_idx_RECCal)->getFloat(_im3u_RECCal,i);
+    float m3v = _c12->getBank(_idx_RECCal)->getFloat(_im3v_RECCal,i);
+    float m3w = _c12->getBank(_idx_RECCal)->getFloat(_im3w_RECCal,i);
     int layerCal = _c12->getBank(_idx_RECCal)->getInt(_ilayer_RECCal,i);
     int calidx = -1; //Array index for lu, lv, lw
 
@@ -73,6 +91,18 @@ bool HipoBankInterface::loadBankData(const std::unique_ptr<clas12::clas12reader>
       _lu_Cal[calidx]=lu;
       _lv_Cal[calidx]=lv;
       _lw_Cal[calidx]=lw;
+
+      _du_Cal[calidx]=du;
+      _dv_Cal[calidx]=dv;
+      _dw_Cal[calidx]=dw;
+
+      _m2u_Cal[calidx]=m2u;
+      _m2v_Cal[calidx]=m2v;
+      _m2w_Cal[calidx]=m2w;
+
+      _m3u_Cal[calidx]=m3u;
+      _m3v_Cal[calidx]=m3v;
+      _m3w_Cal[calidx]=m3w;
 
       _sector_Cal[calidx]=sectorCal;
       _time_Cal[calidx]=timeCal;
@@ -152,6 +182,42 @@ bool HipoBankInterface::importDataToParticle(SIDISParticlev1 *sp)
   sp->set_property(SIDISParticle::cal_lw_ECIN, _lw_Cal[1]);
   sp->set_property(SIDISParticle::cal_lw_ECOUT, _lw_Cal[2]);
 
+  sp->set_property(SIDISParticle::cal_du_PCAL, _du_Cal[0]);
+  sp->set_property(SIDISParticle::cal_du_ECIN, _du_Cal[1]);
+  sp->set_property(SIDISParticle::cal_du_ECOUT, _du_Cal[2]);
+
+  sp->set_property(SIDISParticle::cal_dv_PCAL, _dv_Cal[0]);
+  sp->set_property(SIDISParticle::cal_dv_ECIN, _dv_Cal[1]);
+  sp->set_property(SIDISParticle::cal_dv_ECOUT, _dv_Cal[2]);
+
+  sp->set_property(SIDISParticle::cal_dw_PCAL, _dw_Cal[0]);
+  sp->set_property(SIDISParticle::cal_dw_ECIN, _dw_Cal[1]);
+  sp->set_property(SIDISParticle::cal_dw_ECOUT, _dw_Cal[2]);
+
+  sp->set_property(SIDISParticle::cal_m2u_PCAL, _m2u_Cal[0]);
+  sp->set_property(SIDISParticle::cal_m2u_ECIN, _m2u_Cal[1]);
+  sp->set_property(SIDISParticle::cal_m2u_ECOUT, _m2u_Cal[2]);
+
+  sp->set_property(SIDISParticle::cal_m2v_PCAL, _m2v_Cal[0]);
+  sp->set_property(SIDISParticle::cal_m2v_ECIN, _m2v_Cal[1]);
+  sp->set_property(SIDISParticle::cal_m2v_ECOUT, _m2v_Cal[2]);
+
+  sp->set_property(SIDISParticle::cal_m2w_PCAL, _m2w_Cal[0]);
+  sp->set_property(SIDISParticle::cal_m2w_ECIN, _m2w_Cal[1]);
+  sp->set_property(SIDISParticle::cal_m2w_ECOUT, _m2w_Cal[2]);
+
+  sp->set_property(SIDISParticle::cal_m3u_PCAL, _m3u_Cal[0]);
+  sp->set_property(SIDISParticle::cal_m3u_ECIN, _m3u_Cal[1]);
+  sp->set_property(SIDISParticle::cal_m3u_ECOUT, _m3u_Cal[2]);
+
+  sp->set_property(SIDISParticle::cal_m3v_PCAL, _m3v_Cal[0]);
+  sp->set_property(SIDISParticle::cal_m3v_ECIN, _m3v_Cal[1]);
+  sp->set_property(SIDISParticle::cal_m3v_ECOUT, _m3v_Cal[2]);
+
+  sp->set_property(SIDISParticle::cal_m3w_PCAL, _m3w_Cal[0]);
+  sp->set_property(SIDISParticle::cal_m3w_ECIN, _m3w_Cal[1]);
+  sp->set_property(SIDISParticle::cal_m3w_ECOUT, _m3w_Cal[2]);
+
   // -------------------------------------------------------------
   // Import the REC::Trajectory data
   // -------------------------------------------------------------
@@ -205,6 +271,15 @@ void HipoBankInterface::clear(){
     _lu_Cal[i]=0;
     _lv_Cal[i]=0;
     _lw_Cal[i]=0;
+    _du_Cal[i]=0;
+    _dv_Cal[i]=0;
+    _dw_Cal[i]=0;
+    _m2u_Cal[i]=0;
+    _m2v_Cal[i]=0;
+    _m2w_Cal[i]=0;
+    _m3u_Cal[i]=0;
+    _m3v_Cal[i]=0;
+    _m3w_Cal[i]=0;
     _det_DC[i]=0;
     _path_DC[i]=0;
     _x_DC[i]=0;

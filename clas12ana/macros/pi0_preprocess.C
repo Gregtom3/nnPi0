@@ -1,6 +1,6 @@
 int pi0_preprocess(
-		   const char * input_file = "MC_3053_1.root",
-		   const char * output_file = "MC_3053_1_preprocess.root"
+		   const char * input_file = "MC_3053_2.root",
+		   const char * output_file = "MC_3053_2_preprocess.root"
 ){
 
   
@@ -17,7 +17,7 @@ int pi0_preprocess(
   float _phi[Nmax];
   float _vz[Nmax];
   float _chi2[Nmax];
-  int   _MCmatch_flag[Nmax];
+  int   _MCmatch_flag;
   float _pcal_energy[Nmax];
   float _ecin_energy[Nmax];
   float _ecout_energy[Nmax];
@@ -30,7 +30,7 @@ int pi0_preprocess(
   tOut->Branch("chi2",&_chi2,"chi2[nPart]/F");
   tOut->Branch("eta",&_eta,"eta[nPart]/F");
   tOut->Branch("phi",&_phi,"phi[nPart]/F");
-  tOut->Branch("MCmatch_flag",&_MCmatch_flag,"MCmatch_flag[nPart]/I");
+  tOut->Branch("MCmatch_flag",&_MCmatch_flag,"MCmatch_flag/I");
   tOut->Branch("pcal_energy",&_pcal_energy,"pcal_energy[nPart]/F");
   tOut->Branch("ecin_energy",&_ecin_energy,"ecin_energy[nPart]/F");
   tOut->Branch("ecout_energy",&_ecout_energy,"ecout_energy[nPart]/F");
@@ -85,7 +85,11 @@ int pi0_preprocess(
       
       int pid_center = tr_pid[i];
       float eta_center = tr_eta[i];
-      float phi_center = tr_eta[i];
+      double phi_center = tr_eta[i];
+      
+      // Flag if the particle has MC parent
+      _MCmatch_flag = tr_MCmatch_flag[i];
+
 
       // Nested loop over photons
       if(pid_center==22){
@@ -100,13 +104,13 @@ int pi0_preprocess(
 	  float p       = sqrt(px*px + py*py + pz*pz);
 	  float vz      = tr_vz[j];
 	  float chi2    = tr_chi2[j];
-	  int MCmatch_flag = tr_MCmatch_flag[j];
+
 	  float pcal_e  = tr_pcal_energy[j];
 	  float ecin_e  = tr_ecin_energy[j];
 	  float ecout_e  = tr_ecout_energy[j];
 
 	  float etarel = eta_center-eta;
-	  float phirel = min((double)abs(phi_center-phi),(double)(2*M_PI-abs(phi_center-phi))); 
+	  float phirel = min(abs(phi_center-phi),(2*3.14159265-abs(phi_center-phi))); 
 
 	  _Etarel[j] = etarel;
 	  _Phirel[j] = phirel;
@@ -116,7 +120,6 @@ int pi0_preprocess(
 	  _phi[j] = phi;
 	  _vz[j] = vz;
 	  _chi2[j] = chi2;
-	  _MCmatch_flag[j] = MCmatch_flag;
 	  _pcal_energy[j] = pcal_e;
 	  _ecin_energy[j] = ecin_e;
 	  _ecout_energy[j] = ecout_e;

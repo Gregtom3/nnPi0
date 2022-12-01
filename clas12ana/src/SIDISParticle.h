@@ -90,6 +90,36 @@ class SIDISParticle
     cal_lw_ECIN = 247,
     cal_lw_ECOUT = 248,
 
+    cal_du_PCAL = 340,
+    cal_du_ECIN = 341,
+    cal_du_ECOUT = 342,
+    cal_dv_PCAL = 343,
+    cal_dv_ECIN = 344,
+    cal_dv_ECOUT = 345,
+    cal_dw_PCAL = 346,
+    cal_dw_ECIN = 347,
+    cal_dw_ECOUT = 348,
+
+    cal_m2u_PCAL = 440,
+    cal_m2u_ECIN = 441,
+    cal_m2u_ECOUT = 442,
+    cal_m2v_PCAL = 443,
+    cal_m2v_ECIN = 444,
+    cal_m2v_ECOUT = 445,
+    cal_m2w_PCAL = 446,
+    cal_m2w_ECIN = 447,
+    cal_m2w_ECOUT = 448,
+
+    cal_m3u_PCAL = 540,
+    cal_m3u_ECIN = 541,
+    cal_m3u_ECOUT = 542,
+    cal_m3v_PCAL = 543,
+    cal_m3v_ECIN = 544,
+    cal_m3v_ECOUT = 545,
+    cal_m3w_PCAL = 546,
+    cal_m3w_ECIN = 547,
+    cal_m3w_ECOUT = 548,
+
 
     // ------------------ MONTE CARLO VERSION ----------------------- //
     // --  Negative 1-10   Generic Information -- //

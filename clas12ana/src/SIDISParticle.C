@@ -130,6 +130,60 @@ std::pair<const std::string, SIDISParticle::PROPERTY_TYPE> SIDISParticle::get_pr
       return std::make_pair("cal_lw_ECIN",SIDISParticle::type_float);
     case cal_lw_ECOUT:
       return std::make_pair("cal_lw_ECOUT",SIDISParticle::type_float);
+    case cal_du_PCAL:
+      return std::make_pair("cal_du_PCAL",SIDISParticle::type_float);
+    case cal_du_ECIN:
+      return std::make_pair("cal_du_ECIN",SIDISParticle::type_float);
+    case cal_du_ECOUT:
+      return std::make_pair("cal_du_ECOUT",SIDISParticle::type_float);
+    case cal_dv_PCAL:
+      return std::make_pair("cal_dv_PCAL",SIDISParticle::type_float);
+    case cal_dv_ECIN:
+      return std::make_pair("cal_dv_ECIN",SIDISParticle::type_float);
+    case cal_dv_ECOUT:
+      return std::make_pair("cal_dv_ECOUT",SIDISParticle::type_float);
+    case cal_dw_PCAL:
+      return std::make_pair("cal_dw_PCAL",SIDISParticle::type_float);
+    case cal_dw_ECIN:
+      return std::make_pair("cal_dw_ECIN",SIDISParticle::type_float);
+    case cal_dw_ECOUT:
+      return std::make_pair("cal_dw_ECOUT",SIDISParticle::type_float);
+    case cal_m2u_PCAL:
+      return std::make_pair("cal_m2u_PCAL",SIDISParticle::type_float);
+    case cal_m2u_ECIN:
+      return std::make_pair("cal_m2u_ECIN",SIDISParticle::type_float);
+    case cal_m2u_ECOUT:
+      return std::make_pair("cal_m2u_ECOUT",SIDISParticle::type_float);
+    case cal_m2v_PCAL:
+      return std::make_pair("cal_m2v_PCAL",SIDISParticle::type_float);
+    case cal_m2v_ECIN:
+      return std::make_pair("cal_m2v_ECIN",SIDISParticle::type_float);
+    case cal_m2v_ECOUT:
+      return std::make_pair("cal_m2v_ECOUT",SIDISParticle::type_float);
+    case cal_m2w_PCAL:
+      return std::make_pair("cal_m2w_PCAL",SIDISParticle::type_float);
+    case cal_m2w_ECIN:
+      return std::make_pair("cal_m2w_ECIN",SIDISParticle::type_float);
+    case cal_m2w_ECOUT:
+      return std::make_pair("cal_m2w_ECOUT",SIDISParticle::type_float);
+    case cal_m3u_PCAL:
+      return std::make_pair("cal_m3u_PCAL",SIDISParticle::type_float);
+    case cal_m3u_ECIN:
+      return std::make_pair("cal_m3u_ECIN",SIDISParticle::type_float);
+    case cal_m3u_ECOUT:
+      return std::make_pair("cal_m3u_ECOUT",SIDISParticle::type_float);
+    case cal_m3v_PCAL:
+      return std::make_pair("cal_m3v_PCAL",SIDISParticle::type_float);
+    case cal_m3v_ECIN:
+      return std::make_pair("cal_m3v_ECIN",SIDISParticle::type_float);
+    case cal_m3v_ECOUT:
+      return std::make_pair("cal_m3v_ECOUT",SIDISParticle::type_float);
+    case cal_m3w_PCAL:
+      return std::make_pair("cal_m3w_PCAL",SIDISParticle::type_float);
+    case cal_m3w_ECIN:
+      return std::make_pair("cal_m3w_ECIN",SIDISParticle::type_float);
+    case cal_m3w_ECOUT:
+      return std::make_pair("cal_m3w_ECOUT",SIDISParticle::type_float);
 
 
 
