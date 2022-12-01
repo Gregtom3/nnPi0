@@ -44,15 +44,20 @@ def get_model(data_config, **kwargs):
     #     (16, (256, 256, 256)),
     #     ]
     ec_k = kwargs.get('ec_k', 6)
-    ec_c1 = kwargs.get('ec_c1', 64)
-    ec_c2 = kwargs.get('ec_c2', 128)
-    ec_c3 = kwargs.get('ec_c3', 256)
-    fc_c, fc_p = kwargs.get('fc_c', 256), kwargs.get('fc_p', 0.1)
+    ec_c1 = kwargs.get('ec_c1', 16)
+    ec_c2 = kwargs.get('ec_c2', 32)
+    #ec_c3 = kwargs.get('ec_c3', 256)
+    #fc_c, fc_p = kwargs.get('fc_c', 256), kwargs.get('fc_p', 0.1)
+    fc_c, fc_p = kwargs.get('fc_c', 32), kwargs.get('fc_p', 0.1)
+    #    conv_params = [
+    #        (ec_k, (ec_c1, ec_c1, ec_c1)),
+    #        (ec_k, (ec_c2, ec_c2, ec_c2)),
+    #        (ec_k, (ec_c3, ec_c3, ec_c3)),
+    #        ]
     conv_params = [
         (ec_k, (ec_c1, ec_c1, ec_c1)),
-        (ec_k, (ec_c2, ec_c2, ec_c2)),
-        (ec_k, (ec_c3, ec_c3, ec_c3)),
-        ]
+        (ec_k, (ec_c2, ec_c2, ec_c2))
+    ]
     fc_params = [(fc_c, fc_p)]
     use_fusion = True
 
