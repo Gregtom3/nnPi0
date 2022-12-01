@@ -1,0 +1,14 @@
+PREFIX='particlenet-dihadron-test-withpid'
+MODEL_CONFIG='particlenet_pf.py'
+DATA_CONFIG='pf_points_features.yaml'
+PATH_TO_SAMPLES='data-dihadron'
+
+python train.py \
+ --data-train ${PATH_TO_SAMPLES}'/tinyTrain.root' \
+ --data-val ${PATH_TO_SAMPLES}'/tinyTest.root' \
+ --fetch-by-file --fetch-step 1 --num-workers 3 \
+ --data-config 'data-dihadron/'${DATA_CONFIG} \
+ --network-config top_tagging/networks/${MODEL_CONFIG} \
+ --model-prefix output/${PREFIX} \
+ --gpus 0,1 --batch-size 1024 --start-lr 5e-3 --num-epochs 10 --optimizer ranger \
+ --log output/${PREFIX}.train.log
