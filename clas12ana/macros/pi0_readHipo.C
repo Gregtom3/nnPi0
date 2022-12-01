@@ -78,12 +78,38 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   float _pcal_energy[Nmax];
   float _ecin_energy[Nmax];
   float _ecout_energy[Nmax];
+
   float _pcal_lu[Nmax];
   float _pcal_lv[Nmax];
+  float _pcal_lw[Nmax];
+  float _pcal_du[Nmax];
+  float _pcal_dv[Nmax];
+  float _pcal_m2u[Nmax];
+  float _pcal_m2v[Nmax];
+  float _pcal_m3u[Nmax];
+  float _pcal_m3v[Nmax];
+
   float _ecin_lu[Nmax];
   float _ecin_lv[Nmax];
+  float _ecin_lw[Nmax];
+  float _ecin_du[Nmax];
+  float _ecin_dv[Nmax];
+  float _ecin_m2u[Nmax];
+  float _ecin_m2v[Nmax];
+  float _ecin_m3u[Nmax];
+  float _ecin_m3v[Nmax];
+
   float _ecout_lu[Nmax];
   float _ecout_lv[Nmax];
+  float _ecout_lw[Nmax];
+  float _ecout_du[Nmax];
+  float _ecout_dv[Nmax];
+  float _ecout_m2u[Nmax];
+  float _ecout_m2v[Nmax];
+  float _ecout_m3u[Nmax];
+  float _ecout_m3v[Nmax];
+
+
 
   // TTree Branching
   tree->Branch("x",&reco_x,"reco_x/F");
@@ -114,11 +140,43 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   tree->Branch("ecin_energy",&_ecin_energy,"ecin_energy[nPart]/F");
   tree->Branch("ecout_energy",&_ecout_energy,"ecout_energy[nPart]/F");
   tree->Branch("pcal_lu",&_pcal_lu,"pcal_lu[nPart]/F");
-  tree->Branch("ecin_lu",&_ecin_lu,"ecin_lu[nPart]/F");
-  tree->Branch("ecout_lu",&_ecout_lu,"ecout_lu[nPart]/F");
   tree->Branch("pcal_lv",&_pcal_lv,"pcal_lv[nPart]/F");
+  tree->Branch("pcal_lw",&_pcal_lw,"pcal_lw[nPart]/F");
+  tree->Branch("pcal_du",&_pcal_du,"pcal_du[nPart]/F");
+  tree->Branch("pcal_dv",&_pcal_dv,"pcal_dv[nPart]/F");
+  tree->Branch("pcal_dw",&_pcal_dw,"pcal_dw[nPart]/F");
+  tree->Branch("pcal_m2u",&_pcal_m2u,"pcal_m2u[nPart]/F");
+  tree->Branch("pcal_m2v",&_pcal_m2v,"pcal_m2v[nPart]/F");
+  tree->Branch("pcal_m2w",&_pcal_m2w,"pcal_m2w[nPart]/F");
+  tree->Branch("pcal_m3u",&_pcal_m3u,"pcal_m3u[nPart]/F");
+  tree->Branch("pcal_m3v",&_pcal_m3v,"pcal_m3v[nPart]/F");
+  tree->Branch("pcal_m3w",&_pcal_m3w,"pcal_m3w[nPart]/F");
+
+  tree->Branch("ecin_lu",&_ecin_lu,"ecin_lu[nPart]/F");
   tree->Branch("ecin_lv",&_ecin_lv,"ecin_lv[nPart]/F");
+  tree->Branch("ecin_lw",&_ecin_lw,"ecin_lw[nPart]/F");
+  tree->Branch("ecin_du",&_ecin_du,"ecin_du[nPart]/F");
+  tree->Branch("ecin_dv",&_ecin_dv,"ecin_dv[nPart]/F");
+  tree->Branch("ecin_dw",&_ecin_dw,"ecin_dw[nPart]/F");
+  tree->Branch("ecin_m2u",&_ecin_m2u,"ecin_m2u[nPart]/F");
+  tree->Branch("ecin_m2v",&_ecin_m2v,"ecin_m2v[nPart]/F");
+  tree->Branch("ecin_m2w",&_ecin_m2w,"ecin_m2w[nPart]/F");
+  tree->Branch("ecin_m3u",&_ecin_m3u,"ecin_m3u[nPart]/F");
+  tree->Branch("ecin_m3v",&_ecin_m3v,"ecin_m3v[nPart]/F");
+  tree->Branch("ecin_m3w",&_ecin_m3w,"ecin_m3w[nPart]/F");
+
+  tree->Branch("ecout_lu",&_ecout_lu,"ecout_lu[nPart]/F");
   tree->Branch("ecout_lv",&_ecout_lv,"ecout_lv[nPart]/F");
+  tree->Branch("ecout_lw",&_ecout_lw,"ecout_lw[nPart]/F");
+  tree->Branch("ecout_du",&_ecout_du,"ecout_du[nPart]/F");
+  tree->Branch("ecout_dv",&_ecout_dv,"ecout_dv[nPart]/F");
+  tree->Branch("ecout_dw",&_ecout_dw,"ecout_dw[nPart]/F");
+  tree->Branch("ecout_m2u",&_ecout_m2u,"ecout_m2u[nPart]/F");
+  tree->Branch("ecout_m2v",&_ecout_m2v,"ecout_m2v[nPart]/F");
+  tree->Branch("ecout_m2w",&_ecout_m2w,"ecout_m2w[nPart]/F");
+  tree->Branch("ecout_m3u",&_ecout_m3u,"ecout_m3u[nPart]/F");
+  tree->Branch("ecout_m3v",&_ecout_m3v,"ecout_m3v[nPart]/F");
+  tree->Branch("ecout_m3w",&_ecout_m3w,"ecout_m3w[nPart]/F");
 
   // Configure CLAS12 Reader and HipoChain
   // -------------------------------------
@@ -474,11 +532,41 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
       _ecin_energy[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_energy_ECIN); 
       _ecout_energy[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_energy_ECOUT); 
       _pcal_lu[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_PCAL); 
-      _ecin_lu[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_ECIN); 
-      _ecout_lu[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_ECOUT); 
       _pcal_lv[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lv_PCAL); 
+      _pcal_lw[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lw_PCAL); 
+      _pcal_du[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_du_PCAL); 
+      _pcal_dv[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_dv_PCAL); 
+      _pcal_dw[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_dw_PCAL); 
+      _pcal_m2u[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m2u_PCAL); 
+      _pcal_m2v[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m2v_PCAL); 
+      _pcal_m2w[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m2w_PCAL); 
+      _pcal_m3u[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m3u_PCAL); 
+      _pcal_m3v[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m3v_PCAL); 
+      _pcal_m3w[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m3w_PCAL); 
+      _ecin_lu[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_ECIN); 
       _ecin_lv[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lv_ECIN); 
+      _ecin_lw[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lw_ECIN); 
+      _ecin_du[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_du_ECIN); 
+      _ecin_dv[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_dv_ECIN); 
+      _ecin_dw[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_dw_ECIN); 
+      _ecin_m2u[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m2u_ECIN); 
+      _ecin_m2v[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m2v_ECIN); 
+      _ecin_m2w[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m2w_ECIN); 
+      _ecin_m3u[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m3u_ECIN); 
+      _ecin_m3v[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m3v_ECIN); 
+      _ecin_m3w[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m3w_ECIN); 
+      _ecout_lu[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_ECOUT); 
       _ecout_lv[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lv_ECOUT); 
+      _ecout_lw[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lw_ECOUT); 
+      _ecout_du[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_du_ECOUT); 
+      _ecout_dv[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_dv_ECOUT); 
+      _ecout_dw[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_dw_ECOUT); 
+      _ecout_m2u[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m2u_ECOUT); 
+      _ecout_m2v[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m2v_ECOUT); 
+      _ecout_m2w[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m2w_ECOUT); 
+      _ecout_m3u[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m3u_ECOUT); 
+      _ecout_m3v[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m3v_ECOUT); 
+      _ecout_m3w[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_m3w_ECOUT); 
 
       _MCmatch_flag[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::evtgen_part_E)>0? 1:0;       
       _MCmatch_parent_pid[_nPart] =(it_reco->second)->get_property_int(SIDISParticle::evtgen_part_parentPID);       
