@@ -1,10 +1,8 @@
-#include "../Constants.h"
-#include "../Kinematics.h"
-#include "../SIDISParticle.h"
-#include "../SIDISParticlev1.h"
-#include "../PostProcess.h"
-#include "../PID.h"
-#include "../FiducialCuts.h"
+#include "../src/Constants.h"
+#include "../src/Kinematics.h"
+#include "../src/SIDISParticle.h"
+#include "../src/SIDISParticlev1.h"
+#include "../src/FiducialCuts.h"
 #include "../src/HipoBankInterface.h"
 
 typedef std::map<int, SIDISParticle*> type_map_part;
@@ -16,16 +14,17 @@ void DeleteParticlePointers(type_map_part& map){
   }
   return;
 }
-int pi0_study(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/45nA_job_3053_1.hipo",
+int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/45nA_job_3053_1.hipo",
 		const char * outputFile = "MC_3053_1.root",
 		const double _electron_beam_energy = 10.6,
-		const int maxEvents = -1,
+		const int maxEvents = 10000,
 		bool hipo_is_mc = true){
-  
+
+ 
   // Open TTree and declare branches
   // -------------------------------------
   TFile *fOut = new TFile(outputFile,"RECREATE");
-  TTree *tree = new TTree("tree_postprocess","tree_postprocess");
+  TTree *tree = new TTree("RawEvents","RawEvents");
 
   // Initialize important event information
   // --------------------------------------
@@ -44,40 +43,43 @@ int pi0_study(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/
   float reco_nu;
   float reco_W;
 
+  // Maximum number of particles
+  const int Nmax = 100;
+
   // Global variables
   int   _ievent=0;
   int   _nPart=0;
   int   _nPartMatch=0;
   
   // Particle kinematics
-  float _px=0.;
-  float _py=0.;
-  float _pz=0.;
-  float _E=0.;
+  float _px[Nmax];
+  float _py[Nmax];
+  float _pz[Nmax];
+  float _E[Nmax];
 
   // Additional REC::Particle information
-  int   _pid=0;
-  float _beta=0.0;
-  float _chi2=0.0;
+  int   _pid[Nmax];
+  float _beta[Nmax];
+  float _chi2[Nmax];
 
   // MC matching variables
-  int   _MCmatch_flag=0;
-  int   _MCmatch_id=0;
-  int   _MCmatch_parentpid=0;
+  int   _MCmatch_flag[Nmax];
+  int   _MCmatch_parent_id[Nmax];
+  int   _MCmatch_parent_pid[Nmax];
   
   // REC::Calorimeter variables
-  int   _pcal_sector=0;
-  int   _ecin_sector=0;
-  int   _ecout_sector=0;
-  float _pcal_energy=0.;
-  float _ecin_energy=0.;
-  float _ecout_energy=0.;
-  float _pcal_lu=0;
-  float _pcal_lv=0;
-  float _ecin_lu=0;
-  float _ecin_lv=0;
-  float _ecout_lu=0;
-  float _ecout_lv=0;
+  int   _pcal_sector[Nmax];
+  int   _ecin_sector[Nmax];
+  int   _ecout_sector[Nmax];
+  float _pcal_energy[Nmax];
+  float _ecin_energy[Nmax];
+  float _ecout_energy[Nmax];
+  float _pcal_lu[Nmax];
+  float _pcal_lv[Nmax];
+  float _ecin_lu[Nmax];
+  float _ecin_lv[Nmax];
+  float _ecout_lu[Nmax];
+  float _ecout_lv[Nmax];
 
   // TTree Branching
   tree->Branch("x",&reco_x,"reco_x/F");
@@ -87,28 +89,28 @@ int pi0_study(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/
   tree->Branch("ievent",&_ievent,"ievent/I");
   tree->Branch("nPart",&_nPart,"nPart/I");
   tree->Branch("nPartMatch",&_nPartMatch,"nPartMatch/I");
-  tree->Branch("px",&_px,"px/F");
-  tree->Branch("py",&_py,"py/F");
-  tree->Branch("pz",&_pz,"pz/F");
-  tree->Branch("E",&_E,"E/F");
-  tree->Branch("pid",&_pid,"pid/I");
-  tree->Branch("beta",&_beta,"beta/F");
-  tree->Branch("chi2",&_chi2,"chi2/F");
-  tree->Branch("MCmatch_flag",&_MCmatch_flag,"MCmatch_flag/I");
-  tree->Branch("MCmatch_id",&_MCmatch_id,"MCmatch_id/I");
-  tree->Branch("MCmatch_parentpid",&_MCmatch_parentpid,"MCmatch_parentpid/I");
-  tree->Branch("pcal_sector",&_pcal_sector,"pcal_sector/I");
-  tree->Branch("ecin_sector",&_ecin_sector,"ecin_sector/I");
-  tree->Branch("ecout_sector",&_ecout_sector,"ecout_sector/I");
-  tree->Branch("pcal_energy",&_pcal_energy,"pcal_energy/F");
-  tree->Branch("ecin_energy",&_ecin_energy,"ecin_energy/F");
-  tree->Branch("ecout_energy",&_ecout_energy,"ecout_energy/F");
-  tree->Branch("pcal_lu",&_pcal_lu,"pcal_lu/F");
-  tree->Branch("ecin_lu",&_ecin_lu,"ecin_lu/F");
-  tree->Branch("ecout_lu",&_ecout_lu,"ecout_lu/F");
-  tree->Branch("pcal_lv",&_pcal_lv,"pcal_lv/F");
-  tree->Branch("ecin_lv",&_ecin_lv,"ecin_lv/F");
-  tree->Branch("ecout_lv",&_ecout_lv,"ecout_lv/F");
+  tree->Branch("px",&_px,"px[nPart]/F");
+  tree->Branch("py",&_py,"py[nPart]/F");
+  tree->Branch("pz",&_pz,"pz[nPart]/F");
+  tree->Branch("E",&_E,"E[nPart]/F");
+  tree->Branch("pid",&_pid,"pid[nPart]/I");
+  tree->Branch("beta",&_beta,"beta[nPart]/F");
+  tree->Branch("chi2",&_chi2,"chi2[nPart]/F");
+  tree->Branch("MCmatch_flag",&_MCmatch_flag,"MCmatch_flag[nPart]/I");
+  tree->Branch("MCmatch_parent_id",&_MCmatch_parent_id,"MCmatch_parent_id[nPart]/I");
+  tree->Branch("MCmatch_parent_pid",&_MCmatch_parent_pid,"MCmatch_parent_pid[nPart]/I");
+  tree->Branch("pcal_sector",&_pcal_sector,"pcal_sector[nPart]/I");
+  tree->Branch("ecin_sector",&_ecin_sector,"ecin_sector[nPart]/I");
+  tree->Branch("ecout_sector",&_ecout_sector,"ecout_sector[nPart]/I");
+  tree->Branch("pcal_energy",&_pcal_energy,"pcal_energy[nPart]/F");
+  tree->Branch("ecin_energy",&_ecin_energy,"ecin_energy[nPart]/F");
+  tree->Branch("ecout_energy",&_ecout_energy,"ecout_energy[nPart]/F");
+  tree->Branch("pcal_lu",&_pcal_lu,"pcal_lu[nPart]/F");
+  tree->Branch("ecin_lu",&_ecin_lu,"ecin_lu[nPart]/F");
+  tree->Branch("ecout_lu",&_ecout_lu,"ecout_lu[nPart]/F");
+  tree->Branch("pcal_lv",&_pcal_lv,"pcal_lv[nPart]/F");
+  tree->Branch("ecin_lv",&_ecin_lv,"ecin_lv[nPart]/F");
+  tree->Branch("ecout_lv",&_ecout_lv,"ecout_lv[nPart]/F");
 
   // Configure CLAS12 Reader and HipoChain
   // -------------------------------------
@@ -142,7 +144,6 @@ int pi0_study(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/
   HipoBankInterface _hipoInterface = HipoBankInterface(_c12);
   FiducialCuts _fiducial = FiducialCuts();
   Kinematics _kin;
-  PID _pidhelper;
 
   // Create particleMap objects
   // -------------------------------------
@@ -153,12 +154,14 @@ int pi0_study(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/
   // -------------------------------------
   int NumNoEle=0;
   int NumNoGamma=0;
-
-  while(_chain.Next()==true && (_ievent < maxEvents || maxEvents < 0)){
-    if(_ievent%10000==0 && _ievent!=0){
+  
+  int whileidx=0;
+  while(_chain.Next()==true && (whileidx < maxEvents || maxEvents < 0)){
+    if(whileidx%10000==0 && whileidx!=0){
       std::cout << _ievent << " events completed " << std::endl;
     }
-    
+
+    whileidx++;
     // Wipe both particleMaps clean
     // -------------------------------------
     DeleteParticlePointers(recoParticleMap);
@@ -262,11 +265,6 @@ int pi0_study(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/
       if(_hipoInterface.loadBankData(_c12, sp)==false)
 	{delete sp; continue;}
 
-      // CUT REC::Particle
-      // --------------------------------------------------------------------------
-      if(_pidhelper.performPIDCuts(sp)==false)
-	{delete sp;  continue;}
-
       // CUT Fiducial
       // --------------------------------------------------------------------------
       if(_fiducial.FidCutParticle(_c12,11,sp) == false)
@@ -290,7 +288,7 @@ int pi0_study(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/
     // Loop over all Monte Carlo particles
     // -------------------------------------
     auto mcparticles=_c12->mcparts();
-    for(int idx = 0 ; idx < mcparticles->getRows() && hipo_is_MC ; idx++){
+    for(int idx = 0 ; idx < mcparticles->getRows() && hipo_is_mc ; idx++){
     
       // Create new SIDISParticle
       SIDISParticlev1 *sp = new SIDISParticlev1();
@@ -365,7 +363,7 @@ int pi0_study(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/
  
     // Loop over all reco particles
     /* Loop over all reco particles */
-    for (type_map_part::iterator it_reco = recoParticleMap.begin(); it_reco!= recoParticleMap.end() && hipo_is_MC; ++it_reco){
+    for (type_map_part::iterator it_reco = recoParticleMap.begin(); it_reco!= recoParticleMap.end() && hipo_is_mc; ++it_reco){
 
       double reco_theta = (it_reco->second)->get_property_float(SIDISParticle::part_theta); 
       double reco_phi = (it_reco->second)->get_property_float(SIDISParticle::part_phi); 
@@ -427,37 +425,39 @@ int pi0_study(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/
     // Loop over all recoParticles and fill TTree
     _nPart=0;
     _nPartMatch=0;
-    for (type_map_part::iterator it_reco = recoParticleMap.begin(); it_reco!= recoParticleMap.end() && hipo_is_MC; ++it_reco){
-      _px = (it_reco->second)->get_property_float(SIDISParticle::part_px); 
-      _py = (it_reco->second)->get_property_float(SIDISParticle::part_py); 
-      _pz = (it_reco->second)->get_property_float(SIDISParticle::part_pz); 
-      _E = (it_reco->second)->get_property_float(SIDISParticle::part_E); 
-      _pid = (it_reco->second)->get_property_int(SIDISParticle::part_pid); 
-      _beta = (it_reco->second)->get_property_float(SIDISParticle::part_beta); 
-      _chi2 = (it_reco->second)->get_property_float(SIDISParticle::part_chi2); 
-      _pcal_sector = (it_reco->second)->get_property_int(SIDISParticle::cal_sector_PCAL); 
-      _ecin_sector = (it_reco->second)->get_property_int(SIDISParticle::cal_sector_ECIN); 
-      _ecout_sector = (it_reco->second)->get_property_int(SIDISParticle::cal_sector_ECOUT); 
-      _pcal_energy = (it_reco->second)->get_property_float(SIDISParticle::cal_energy_PCAL); 
-      _ecin_energy = (it_reco->second)->get_property_float(SIDISParticle::cal_energy_ECIN); 
-      _ecout_energy = (it_reco->second)->get_property_float(SIDISParticle::cal_energy_ECOUT); 
-      _pcal_lu = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_PCAL); 
-      _ecin_lu = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_ECIN); 
-      _ecout_lu = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_ECOUT); 
-      _pcal_lv = (it_reco->second)->get_property_float(SIDISParticle::cal_lv_PCAL); 
-      _ecin_lv = (it_reco->second)->get_property_float(SIDISParticle::cal_lv_ECIN); 
-      _ecout_lv = (it_reco->second)->get_property_float(SIDISParticle::cal_lv_ECOUT); 
+    for (type_map_part::iterator it_reco = recoParticleMap.begin(); it_reco!= recoParticleMap.end(); ++it_reco){
+      _px[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_px); 
+      _py[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_py); 
+      _pz[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_pz); 
+      _E[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_E); 
+      _pid[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::part_pid); 
+      _beta[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_beta); 
+      _chi2[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_chi2); 
+      _pcal_sector[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::cal_sector_PCAL); 
+      _ecin_sector[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::cal_sector_ECIN); 
+      _ecout_sector[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::cal_sector_ECOUT); 
+      _pcal_energy[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_energy_PCAL); 
+      _ecin_energy[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_energy_ECIN); 
+      _ecout_energy[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_energy_ECOUT); 
+      _pcal_lu[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_PCAL); 
+      _ecin_lu[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_ECIN); 
+      _ecout_lu[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lu_ECOUT); 
+      _pcal_lv[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lv_PCAL); 
+      _ecin_lv[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lv_ECIN); 
+      _ecout_lv[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::cal_lv_ECOUT); 
 
-      _MCmatch_flag = (it_reco->second)->get_property_int(SIDISParticle::evtgen_part_E)>0? 1:0;       
-      _MCmatch_parent_pid =(it_reco->second)->get_property_int(SIDISParticle::evtgen_part_parentPID);       
-      _MCmatch_parent_id =(it_reco->second)->get_property_int(SIDISParticle::evtgen_part_parentID);       
+      _MCmatch_flag[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::evtgen_part_E)>0? 1:0;       
+      _MCmatch_parent_pid[_nPart] =(it_reco->second)->get_property_int(SIDISParticle::evtgen_part_parentPID);       
+      _MCmatch_parent_id[_nPart] =(it_reco->second)->get_property_int(SIDISParticle::evtgen_part_parentID);       
 
-      _nPart++;
-      if(_MCmatch_flag==1)
+      if(_MCmatch_flag[_nPart]==1)
 	_nPartMatch++;
+      _nPart++;
     }
+    tree->Fill();
     _ievent++;
   }  
+
   cout << _ievent << " events analyzed ... " << endl;
   cout << NumNoEle << " events without an electron passing cuts ... " << endl;
 
