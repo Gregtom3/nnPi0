@@ -1,11 +1,11 @@
-#include "../src/Constants.h"
-#include "../src/Kinematics.h"
 #include "../src/SIDISParticle.h"
 #include "../src/SIDISParticlev1.h"
+typedef std::map<int, SIDISParticle*> type_map_part;
+#include "../src/PID.C"
+#include "../src/Constants.h"
+#include "../src/Kinematics.h"
 #include "../src/FiducialCuts.h"
 #include "../src/HipoBankInterface.h"
-
-typedef std::map<int, SIDISParticle*> type_map_part;
 
 void DeleteParticlePointers(type_map_part& map){
   for(type_map_part::iterator it = map.begin(); it!=map.end(); ++it){
@@ -56,6 +56,10 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   float _py[Nmax];
   float _pz[Nmax];
   float _E[Nmax];
+  float _theta[Nmax];
+  float _eta[Nmax];
+  float _phi[Nmax];
+  float _vz[Nmax];
 
   // Additional REC::Particle information
   int   _pid[Nmax];
@@ -93,6 +97,10 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   tree->Branch("py",&_py,"py[nPart]/F");
   tree->Branch("pz",&_pz,"pz[nPart]/F");
   tree->Branch("E",&_E,"E[nPart]/F");
+  tree->Branch("theta",&_theta,"theta[nPart]/F");
+  tree->Branch("eta",&_eta,"eta[nPart]/F");
+  tree->Branch("phi",&_phi,"phi[nPart]/F");
+  tree->Branch("vz",&_vz,"vz[nPart]/F");
   tree->Branch("pid",&_pid,"pid[nPart]/I");
   tree->Branch("beta",&_beta,"beta[nPart]/F");
   tree->Branch("chi2",&_chi2,"chi2[nPart]/F");
@@ -144,6 +152,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   HipoBankInterface _hipoInterface = HipoBankInterface(_c12);
   FiducialCuts _fiducial = FiducialCuts();
   Kinematics _kin;
+  PID _pidhelper;
 
   // Create particleMap objects
   // -------------------------------------
@@ -153,7 +162,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   // Loop over HipoChain
   // -------------------------------------
   int NumNoEle=0;
-  int NumNoGamma=0;
+  int NumNo2g=0;
   
   int whileidx=0;
   while(_chain.Next()==true && (whileidx < maxEvents || maxEvents < 0)){
@@ -177,6 +186,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
     auto particles=_c12->getDetParticles();
     int l=0;
     bool foundEle=false;
+    bool found2g=false;
     for(unsigned int idx = 0 ; idx < particles.size() ; idx++){
       // Extract each particle from event one-at-a-time
       // -------------------------------------------------------
@@ -273,17 +283,34 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
     
       // Add SIDISParticle to the collection
       // --------------------------------------------------------------------------
-      if(pid==11){
-	foundEle=true;
-      }
+
       recoParticleMap.insert ( make_pair( l++ , sp) );
 
     }
+
+    // Apply particle cuts on the map, obtaining a new map
+    // --------------------------------------------------------------------------
+    recoParticleMap = _pidhelper.applyCuts(recoParticleMap);
+
+    // Loop over recoParticleMap to make sure we have an electron and 2 gammas
+    // --------------------------------------------------------------------------
+    int numEle = _pidhelper.countPID(recoParticleMap,11);
+    int numGamma = _pidhelper.countPID(recoParticleMap,22);
+    
+    if(numEle==1)
+      foundEle=true;
+    if(numGamma>=2)
+      found2g=true;
 
     if(foundEle==false){
       NumNoEle++;
       continue;
     }
+    if(found2g==false){
+      NumNo2g++;
+      continue;
+    }
+      
     
     // Loop over all Monte Carlo particles
     // -------------------------------------
@@ -430,6 +457,10 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
       _py[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_py); 
       _pz[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_pz); 
       _E[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_E); 
+      _theta[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_theta); 
+      _eta[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_eta); 
+      _phi[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_phi); 
+      _vz[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_vz); 
       _pid[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::part_pid); 
       _beta[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_beta); 
       _chi2[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_chi2); 
@@ -460,6 +491,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
 
   cout << _ievent << " events analyzed ... " << endl;
   cout << NumNoEle << " events without an electron passing cuts ... " << endl;
+  cout << NumNo2g << " events without 2 gammas passing cuts ... " << endl;
 
   tree->Write();
   fOut->Close();
