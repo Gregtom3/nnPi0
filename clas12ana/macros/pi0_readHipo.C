@@ -84,30 +84,38 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   float _pcal_lw[Nmax];
   float _pcal_du[Nmax];
   float _pcal_dv[Nmax];
+  float _pcal_dw[Nmax];
   float _pcal_m2u[Nmax];
   float _pcal_m2v[Nmax];
+  float _pcal_m2w[Nmax];
   float _pcal_m3u[Nmax];
   float _pcal_m3v[Nmax];
-
+  float _pcal_m3w[Nmax];
   float _ecin_lu[Nmax];
   float _ecin_lv[Nmax];
   float _ecin_lw[Nmax];
   float _ecin_du[Nmax];
   float _ecin_dv[Nmax];
+  float _ecin_dw[Nmax];
   float _ecin_m2u[Nmax];
   float _ecin_m2v[Nmax];
+  float _ecin_m2w[Nmax];
   float _ecin_m3u[Nmax];
   float _ecin_m3v[Nmax];
-
+  float _ecin_m3w[Nmax];
   float _ecout_lu[Nmax];
   float _ecout_lv[Nmax];
   float _ecout_lw[Nmax];
   float _ecout_du[Nmax];
   float _ecout_dv[Nmax];
+  float _ecout_dw[Nmax];
   float _ecout_m2u[Nmax];
   float _ecout_m2v[Nmax];
+  float _ecout_m2w[Nmax];
   float _ecout_m3u[Nmax];
   float _ecout_m3v[Nmax];
+  float _ecout_m3w[Nmax];
+
 
 
 

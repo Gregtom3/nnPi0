@@ -1,5 +1,5 @@
-int index_of_element(std::vector<float> vect, float key){
-    std::vector<int>::iterator itr = std::find(v.begin(), v.end(), key);
+int index_of_element(std::vector<float> v, float key){
+    std::vector<float>::iterator itr = std::find(v.begin(), v.end(), key);
     if (itr != v.cend()) {
         return std::distance(v.begin(), itr);
     }
@@ -20,9 +20,18 @@ int pi0_preprocess_catboost(
     TTree *tOut = new TTree("PreProcessedEvents","PreProcessedEvents");
     
     int flag = 0;
+    int nPhotons = 0;
+    int nHadrons = 0;
     float gE = 0;
     float gTheta = 0;
     float gPhi = 0;
+    float g_pcal_e = 0;
+    float g_pcal_du = 0;
+    float g_pcal_dv = 0;
+    float g_pcal_m2u = 0;
+    float g_pcal_m2v = 0;
+    float g_pcal_m3u = 0;
+    float g_pcal_m3v = 0;
     
     float g1R = 0; // R is defined as the angle between the photon of interest and its neighbor
                    // the symbol 'g' signifies we are looking at photon neighbors
@@ -33,6 +42,22 @@ int pi0_preprocess_catboost(
     float g1dE = 0; // dE is defined as the energy difference between the photon of interest and its neighbor
     float g2dE = 0; 
     
+    float g1_pcal_e = 0;
+    float g1_pcal_du = 0;
+    float g1_pcal_dv = 0;
+    float g1_pcal_m2u = 0;
+    float g1_pcal_m2v = 0;
+    float g1_pcal_m3u = 0;
+    float g1_pcal_m3v = 0;
+    float g2_pcal_e = 0;
+    float g2_pcal_du = 0;
+    float g2_pcal_dv = 0;
+    float g2_pcal_m2u = 0;
+    float g2_pcal_m2v = 0;
+    float g2_pcal_m3u = 0;
+    float g2_pcal_m3v = 0;
+    
+    
     float h1R = 0; // the symbol 'h' signifies we are looking at hadron neighbors
     float h1M = 0;
     float h1dE = 0;
@@ -42,16 +67,43 @@ int pi0_preprocess_catboost(
     float h2dE = 0;
     float h2q = 0; // q is defined as the charge of the hadron
     
+    float eR = 0; // the symbol 'e' signifies we are looking at the electron 
+    float eM = 0;
+    float edE = 0; // edE is the fraction of energy of the electron carred by the photon
+    
     tOut->Branch("flag",&flag,"flag/I");
+    tOut->Branch("nPhotons",&nPhotons,"nPhotons/I");
+    tOut->Branch("nHadrons",&nHadrons,"nHadrons/I");
     tOut->Branch("gE",&gE,"gE/F");
     tOut->Branch("gTheta",&gTheta,"gTheta/F");
     tOut->Branch("gPhi",&gPhi,"gPhi/F");
+    tOut->Branch("g_pcal_e",&g_pcal_e,"g_pcal_e/F");
+    tOut->Branch("g_pcal_du",&g_pcal_du,"g_pcal_du/F");
+    tOut->Branch("g_pcal_dv",&g_pcal_dv,"g_pcal_dv/F");
+    tOut->Branch("g_pcal_m2u",&g_pcal_m2u,"g_pcal_m2u/F");
+    tOut->Branch("g_pcal_m2v",&g_pcal_m2v,"g_pcal_m2v/F");
+    tOut->Branch("g_pcal_m3u",&g_pcal_m3u,"g_pcal_m3u/F");
+    tOut->Branch("g_pcal_m3v",&g_pcal_m3v,"g_pcal_m3v/F");
     tOut->Branch("g1R",&g1R,"g1R/F");
     tOut->Branch("g2R",&g2R,"g2R/F");
     tOut->Branch("g1M",&g1M,"g1M/F");
     tOut->Branch("g2M",&g2M,"g2M/F");
     tOut->Branch("g1dE",&g1dE,"g1dE/F");
     tOut->Branch("g2dE",&g2dE,"g2dE/F");
+    tOut->Branch("g1_pcal_e",&g1_pcal_e,"g1_pcal_e/F");
+    tOut->Branch("g2_pcal_e",&g2_pcal_e,"g2_pcal_e/F");
+    tOut->Branch("g1_pcal_du",&g1_pcal_du,"g1_pcal_du/F");
+    tOut->Branch("g1_pcal_dv",&g1_pcal_dv,"g1_pcal_dv/F");
+    tOut->Branch("g1_pcal_m2u",&g1_pcal_m2u,"g1_pcal_m2u/F");
+    tOut->Branch("g1_pcal_m2v",&g1_pcal_m2v,"g1_pcal_m2v/F");
+    tOut->Branch("g1_pcal_m3u",&g1_pcal_m3u,"g1_pcal_m3u/F");
+    tOut->Branch("g1_pcal_m3v",&g1_pcal_m3v,"g1_pcal_m3v/F");
+    tOut->Branch("g2_pcal_du",&g2_pcal_du,"g2_pcal_du/F");
+    tOut->Branch("g2_pcal_dv",&g2_pcal_dv,"g2_pcal_dv/F");
+    tOut->Branch("g2_pcal_m2u",&g2_pcal_m2u,"g2_pcal_m2u/F");
+    tOut->Branch("g2_pcal_m2v",&g2_pcal_m2v,"g2_pcal_m2v/F");
+    tOut->Branch("g2_pcal_m3u",&g2_pcal_m3u,"g2_pcal_m3u/F");
+    tOut->Branch("g2_pcal_m3v",&g2_pcal_m3v,"g2_pcal_m3v/F");
     tOut->Branch("h1R",&h1R,"h1R/F");
     tOut->Branch("h2R",&h2R,"h2R/F");
     tOut->Branch("h1M",&h1M,"h1M/F");
@@ -60,7 +112,9 @@ int pi0_preprocess_catboost(
     tOut->Branch("h2dE",&h2dE,"h2dE/F");
     tOut->Branch("h1q",&h1q,"h1q/F");
     tOut->Branch("h2q",&h2q,"h2q/F");
-    
+    tOut->Branch("eR",&eR,"eR/F");
+    tOut->Branch("eM",&eM,"eM/F");
+    tOut->Branch("edE",&edE,"edE/F");
     
     TChain *chain = new TChain("RawEvents");
     chain->Add(input_file);
@@ -132,7 +186,7 @@ int pi0_preprocess_catboost(
     while(tr.Next()){
 
         // Get number of particles in event
-        _nPart = tr_nPart[0];
+        int _nPart = tr_nPart[0];
 
 
         // Loop over particles in the event
@@ -144,17 +198,39 @@ int pi0_preprocess_catboost(
             gE = tr_E[i];
             gTheta = tr_theta[i];
             gPhi = tr_phi[i];
-            
+            g_pcal_e = tr_pcal_energy[i];
+            g_pcal_du = tr_pcal_du[i];
+            g_pcal_dv = tr_pcal_dv[i];
+            g_pcal_m2u = tr_pcal_m2u[i];
+            g_pcal_m2v = tr_pcal_m2v[i];
+            g_pcal_m3u = tr_pcal_m3u[i];
+            g_pcal_m3v = tr_pcal_m3v[i];
             TLorentzVector g(tr_px[i],tr_py[i],tr_pz[i],tr_E[i]);
 
             // Flag if the particle has MC parent
             flag = tr_MCmatch_flag[i];
 
+            // Loop over electrons in the event
+            for(int j = 0 ; j < _nPart ; j++){
+                if(tr_pid[j]==11){
+                    TLorentzVector e(tr_px[j],tr_py[j],tr_pz[j],tr_E[j]);
+                    eR = g.Angle(e.Vect());
+                    eM = (e+g).M();
+                    edE = g.E()/e.E();
+                }
+            }
             // Loop over photons in the event
             std::vector<int> ig;
             std::vector<float> gR;
             std::vector<float> gM;
             std::vector<float> gdE;
+            std::vector<float> gg_pcal_e;
+            std::vector<float> gg_pcal_du;
+            std::vector<float> gg_pcal_dv;
+            std::vector<float> gg_pcal_m2u;
+            std::vector<float> gg_pcal_m2v;
+            std::vector<float> gg_pcal_m3u;
+            std::vector<float> gg_pcal_m3v;
             for(int j = 0 ; j < _nPart; j++){
                 if(i==j) continue;
                 int pid = tr_pid[j];
@@ -164,12 +240,19 @@ int pi0_preprocess_catboost(
                 gR.push_back(g.Angle(gg.Vect()));
                 gM.push_back((g+gg).M());
                 gdE.push_back(g.E()-gg.E());
+                gg_pcal_e.push_back(tr_pcal_energy[j]);
+                gg_pcal_du.push_back(tr_pcal_du[j]);
+                gg_pcal_dv.push_back(tr_pcal_dv[j]);
+                gg_pcal_m2u.push_back(tr_pcal_m2u[j]);
+                gg_pcal_m2v.push_back(tr_pcal_m2v[j]);
+                gg_pcal_m3u.push_back(tr_pcal_m3u[j]);
+                gg_pcal_m3v.push_back(tr_pcal_m3v[j]);
             }
             
             // Loop over hadrons in the event
             std::vector<int> ih;
             std::vector<float> hR;
-            std::vector<float> hgM;
+            std::vector<float> hM;
             std::vector<float> hdE;
             std::vector<float> hq;
             for(int j = 0 ; j < _nPart; j++){
@@ -189,9 +272,13 @@ int pi0_preprocess_catboost(
                     hq.push_back(0);
             }
             
+            nPhotons=ig.size();
+            nHadrons=ih.size();
+            
             // If there was no photons or no hadrons, continue
             if(ig.size() == 0 || ih.size()==0)
                 continue;
+            
             
             // Sort the R vectors to find closest proximity neighbors to photon
             std::vector<float> gRclone = gR;
@@ -220,6 +307,22 @@ int pi0_preprocess_catboost(
             g2M = gM[ig2];
             g1dE = gdE[ig1];
             g2dE = gdE[ig2];
+            g1_pcal_e = gg_pcal_e[ig1];
+            g2_pcal_e = gg_pcal_e[ig2];
+            g1_pcal_du = gg_pcal_du[ig1];
+            g2_pcal_du = gg_pcal_du[ig2];
+            g1_pcal_dv = gg_pcal_dv[ig1];
+            g2_pcal_dv = gg_pcal_dv[ig2];
+            g1_pcal_m2u = gg_pcal_m2u[ig1];
+            g2_pcal_m2u = gg_pcal_m2u[ig2];
+            g1_pcal_m2v = gg_pcal_m2v[ig1];
+            g2_pcal_m2v = gg_pcal_m2v[ig2];
+            g1_pcal_m3u = gg_pcal_m3u[ig1];
+            g2_pcal_m3u = gg_pcal_m3u[ig2];
+            g1_pcal_m3v = gg_pcal_m3v[ig1];
+            g2_pcal_m3v = gg_pcal_m3v[ig2];
+            
+            
             h1M = hM[ih1];
             h2M = hM[ih2];
             h1q = hq[ih1];
@@ -231,6 +334,8 @@ int pi0_preprocess_catboost(
             tOut->Fill();
         }
     }
+    // Write TTree
+    tOut->Write();
     // Close TFile
     fOut->Close();
     return 0;
