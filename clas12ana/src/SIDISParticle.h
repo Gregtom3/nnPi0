@@ -90,7 +90,7 @@ class SIDISParticle
     cal_lw_ECIN = 247,
     cal_lw_ECOUT = 248,
 
-    cal_du_PCAL = 340,
+    cal_du_PCAL = 139,
     cal_du_ECIN = 341,
     cal_du_ECOUT = 342,
     cal_dv_PCAL = 343,
