@@ -277,7 +277,7 @@ int pi0_preprocess_catboost(
             nHadrons=ih.size();
             
             // If there was no other photons or no hadrons, continue
-            if(ig.size() == 1 || ih.size()==0)
+            if(ig.size() == 0 || ih.size()==0)
                 continue;
             
             
