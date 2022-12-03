@@ -9,7 +9,6 @@ int index_of_element(std::vector<float> v, float key){
     }
 }
 
-
 int pi0_preprocess_catboost(
 		   const char * input_file = "MC_3053_2.root",
 		   const char * output_file = "MC_3053_2_preprocess.root"
@@ -19,6 +18,7 @@ int pi0_preprocess_catboost(
     TFile *fOut = new TFile(output_file,"RECREATE");
     TTree *tOut = new TTree("PreProcessedEvents","PreProcessedEvents");
     
+    int ievent = 0;
     int flag = 0;
     int nPhotons = 0;
     int nHadrons = 0;
@@ -71,6 +71,7 @@ int pi0_preprocess_catboost(
     float eM = 0;
     float edE = 0; // edE is the fraction of energy of the electron carred by the photon
     
+    tOut->Branch("ievent",&ievent,"ievent/I");
     tOut->Branch("flag",&flag,"flag/I");
     tOut->Branch("nPhotons",&nPhotons,"nPhotons/I");
     tOut->Branch("nHadrons",&nHadrons,"nHadrons/I");
@@ -272,11 +273,11 @@ int pi0_preprocess_catboost(
                     hq.push_back(0);
             }
             
-            nPhotons=ig.size();
+            nPhotons=ig.size()+1; // Add one because of the photon of interest (one not looped over)
             nHadrons=ih.size();
             
-            // If there was no photons or no hadrons, continue
-            if(ig.size() == 0 || ih.size()==0)
+            // If there was no other photons or no hadrons, continue
+            if(ig.size() == 1 || ih.size()==0)
                 continue;
             
             
@@ -333,6 +334,7 @@ int pi0_preprocess_catboost(
             // Fill TTree
             tOut->Fill();
         }
+        ievent++;
     }
     // Write TTree
     tOut->Write();
