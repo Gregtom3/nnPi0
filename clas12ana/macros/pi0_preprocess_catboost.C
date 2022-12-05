@@ -214,7 +214,7 @@ int pi0_preprocess_catboost(
             // Loop over electrons in the event
             for(int j = 0 ; j < _nPart ; j++){
                 if(tr_pid[j]==11){
-                    TLorentzVector e(tr_px[j],tr_py[j],tr_pz[j],tr_E[j]);
+		    TLorentzVector e(tr_px[j],tr_py[j],tr_pz[j],tr_E[j]);
                     eR = g.Angle(e.Vect());
                     eM = (e+g).M();
                     edE = g.E()/e.E();
@@ -233,7 +233,7 @@ int pi0_preprocess_catboost(
             std::vector<float> gg_pcal_m3u;
             std::vector<float> gg_pcal_m3v;
             for(int j = 0 ; j < _nPart; j++){
-                if(i==j) continue;
+		if(i==j) continue;
                 int pid = tr_pid[j];
                 if(pid!=22) continue;
                 TLorentzVector gg(tr_px[j],tr_py[j],tr_pz[j],tr_E[j]);
@@ -259,7 +259,7 @@ int pi0_preprocess_catboost(
             for(int j = 0 ; j < _nPart; j++){
                 if(i==j) continue;
                 int pid = tr_pid[j];
-                if(pid!=221 && pid!=-211 && pid!=2212 && pid!=2112 && pid!=321 && pid!=-321) continue;
+                if(pid!=211 && pid!=-211 && pid!=2212 && pid!=2112 && pid!=321 && pid!=-321) continue;
                 TLorentzVector h(tr_px[j],tr_py[j],tr_pz[j],tr_E[j]);
                 ih.push_back(j);
                 hR.push_back(g.Angle(h.Vect()));
@@ -277,9 +277,9 @@ int pi0_preprocess_catboost(
             nHadrons=ih.size();
             
             // If there was no other photons or no hadrons, continue
-            if(ig.size() == 0 || ih.size()==0)
-                continue;
-            
+            if(ig.size() == 0 || ih.size()==0){
+	      continue;
+	    }            
             
             // Sort the R vectors to find closest proximity neighbors to photon
             std::vector<float> gRclone = gR;
