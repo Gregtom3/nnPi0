@@ -40,7 +40,7 @@ def load_files():
             RAW_FILES.append(RAW_DATA_DIR+"/"+file)
             PREPROCESSED_FILES.append(PREPROCESS_DATA_DIR+"/"+file+":PreProcessedEvents")
             POSTPROCESSED_FILES.append(OUTPUT_DIR+"/"+file)
-    print(len(RAW_FILES),"root files found for the ML predictions")
+    print("\n",len(RAW_FILES),"root files found for the ML predictions\n","-"*70,"\n")
     
 def load_data(file):
 
@@ -123,7 +123,7 @@ def predict():
         post_tree.SetName("PostProcessedEvents")
 
         #listOfBranches is the list of desired branches
-        listOfBranches = ["hel","x","Q2","W","nPart","px","py","pz","E","pid","theta","eta","phi"]
+        listOfBranches = ["hel","x","Q2","W","nPart","px","py","pz","E","pid","theta","eta","phi","MCmatch_parent_id","MCmatch_parent_pid"]
     
         #Get the list of branches
         branchList = post_tree.GetListOfBranches()
