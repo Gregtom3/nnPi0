@@ -100,7 +100,7 @@ def get_data():
 
         # add the numpy array to the overall array
         data = np.vstack([data, temp_data])
-        break
+
     #reshape the data into a N by (number of TBranches) matrix
     data = data.reshape(data.shape[0],len(branch_names))
     
