@@ -93,7 +93,7 @@ def predict():
         post_tree.SetName("PostProcessedEvents")
 
         #listOfBranches is the list of desired branches
-        listOfBranches = ["x","Q2","W","nPart","px","py","pz","E","pid","theta","eta","phi"]
+        listOfBranches = ["hel","x","Q2","W","nPart","px","py","pz","E","pid","theta","eta","phi"]
 
         #Get the list of branches
         branchList = post_tree.GetListOfBranches()
