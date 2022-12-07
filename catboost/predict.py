@@ -93,9 +93,9 @@ def load_data(file):
     # Delete ievent and flag columns
     X =  np.delete(data,[idx_ievent,idx_flag],1)
     y =  data[:,idx_flag]
-    iev =data[:,idx_ievent]
+    iev = data[:,idx_ievent].astype(int)
     
-    return X,y,np.unique(iev,dtype=int)
+    return X,y,np.unique(iev)
 
 def predict():
     
