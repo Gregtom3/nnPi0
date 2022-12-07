@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--lr' , type=float, default = "0.05", help="Learning rate [default: 0.05]")
 parser.add_argument('--depth', type=int, default = "5", help="Maximum depth per tree [default: 5]")
-parser.add_argument('--l2_leaf_reg', type=float, default = "4", help="L2 leaf reg [default: 4.0]")
+parser.add_argument('--l2_leaf_reg', type=float, default = "4.0", help="L2 leaf reg [default: 4.0]")
 parser.add_argument('--iters', type=int, default="1000", help="Number of iterations [default: 1000]")
 parser.add_argument('--max_leaves', type=int, default="64", help="Maximum number of leaves [default: 64]")
 parser.add_argument('--min_data_in_leaf', type=int, default="1", help="Minimum number of data for leaf to split [default: 1]")
@@ -51,8 +51,38 @@ def get_data():
     tree = uproot.open(root_files[0])
 
     #get the branch names
-    branch_names = tree.keys()
-
+    branch_names = ['flag','ievent','nPhotons',
+            'nHadrons',
+             'gE',
+             'gTheta',
+             'gPhi',
+             'g_pcal_e',
+             'g1_pcal_e',
+             'g2_pcal_e',
+             'g_pcal_du',
+             'g_pcal_dv',
+             'g_pcal_m2u',
+             'g_pcal_m2v',
+             'g_pcal_m3u',
+             'g_pcal_m3v',
+             'g1R',
+             'g2R',
+             'g1M',
+             'g2M',
+             'g1dE',
+             'g2dE',
+             'h1R',
+             'h2R',
+             'h1M',
+             'h2M',
+             'h1dE',
+             'h2dE',
+             'h1q',
+             'h2q',
+             'eR',
+             'eM',
+             'edE']
+    
     # Column idx
     idx_ievent = branch_names.index("ievent")
     idx_flag   = branch_names.index("flag")
@@ -70,7 +100,7 @@ def get_data():
 
         # add the numpy array to the overall array
         data = np.vstack([data, temp_data])
-
+        break
     #reshape the data into a N by (number of TBranches) matrix
     data = data.reshape(data.shape[0],len(branch_names))
     
@@ -78,7 +108,7 @@ def get_data():
     X = np.delete(data,[idx_ievent,idx_flag],1)
     y=  data[:,idx_flag]
     
-    X_train, X_validation, y_train, y_validation = train_test_split(X, y, train_size=0.75, random_state=42)
+    X_train, X_validation, y_train, y_validation = train_test_split(X, y, train_size=TRAIN_SIZE, random_state=SEED)
     return X_train, X_validation, y_train, y_validation
 
 def train():

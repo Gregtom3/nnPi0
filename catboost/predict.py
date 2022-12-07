@@ -48,8 +48,38 @@ def load_data(file):
     tree = uproot.open(file)
 
     #get the branch names
-    branch_names = tree.keys()
-
+    branch_names = ['flag','ievent','nPhotons',
+            'nHadrons',
+             'gE',
+             'gTheta',
+             'gPhi',
+             'g_pcal_e',
+             'g1_pcal_e',
+             'g2_pcal_e',
+             'g_pcal_du',
+             'g_pcal_dv',
+             'g_pcal_m2u',
+             'g_pcal_m2v',
+             'g_pcal_m3u',
+             'g_pcal_m3v',
+             'g1R',
+             'g2R',
+             'g1M',
+             'g2M',
+             'g1dE',
+             'g2dE',
+             'h1R',
+             'h2R',
+             'h1M',
+             'h2M',
+             'h1dE',
+             'h2dE',
+             'h1q',
+             'h2q',
+             'eR',
+             'eM',
+             'edE']
+    
     # Column idx
     idx_ievent = branch_names.index("ievent")
     idx_flag   = branch_names.index("flag")
@@ -65,7 +95,7 @@ def load_data(file):
     y =  data[:,idx_flag]
     iev =data[:,idx_ievent]
     
-    return X,y,np.unique(iev)
+    return X,y,np.unique(iev,dtype=int)
 
 def predict():
     
@@ -94,7 +124,7 @@ def predict():
 
         #listOfBranches is the list of desired branches
         listOfBranches = ["hel","x","Q2","W","nPart","px","py","pz","E","pid","theta","eta","phi"]
-
+    
         #Get the list of branches
         branchList = post_tree.GetListOfBranches()
 
@@ -112,7 +142,7 @@ def predict():
         # Fill the new branch with data
         print("Creating PostProcess Tree...",end="")
         k=0
-        for i in range(len(ievent)):
+        for i in ievent:
             raw_tree.GetEntry(i)
 
             nPart   = raw_tree.nPart
