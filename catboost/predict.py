@@ -12,15 +12,18 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--raw_data_dir' , type=str, default = "/volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/raw", help="Location of raw ROOT files for predicting [default: /volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/raw]")
 parser.add_argument('--preprocess_data_dir' , type=str, default = "/volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/preprocess_catboost", help="Location of preprocessed ROOT files for predicting [default: /volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/preprocess_catboost]")
 parser.add_argument('--output_dir' , type=str, default= "/volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/postprocess_catboost", help="Location of output ROOT TFiles containing predictions [default: /volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/postprocess_catboost]")
-parser.add_argument('--model_file', type=str, default='./models/test', help='Path to trained CatBoost model [default: ./models/test]')
+parser.add_argument('--model_dir', type=str, default='catboost', help='subdirectory in ./models/< > for model and plots [default: catboost]')
 parser.add_argument('--version' , type=str, default="MC" , help="Type of dataset (MC or nSidis) [default: MC]")
 
 FLAGS = parser.parse_args()
 RAW_DATA_DIR    = FLAGS.raw_data_dir
 PREPROCESS_DATA_DIR    = FLAGS.preprocess_data_dir
 OUTPUT_DIR  = FLAGS.output_dir
-MODEL_FILE  = FLAGS.model_file
+MODEL_DIR  = FLAGS.model_dir
 VERSION     = FLAGS.version
+
+MODEL_DIR="models/"+MODEL_DIR
+MODEL_FILE=MODEL_DIR+"/catboost_model"
 
 RAW_FILES = [] # Contains event-by-event information
 PREPROCESSED_FILES = [] # Contains photon-by-photon information
