@@ -23,6 +23,8 @@ PREPROCESS_DATA_DIR    = FLAGS.preprocess_data_dir
 OUTPUT_DIR  = FLAGS.output_dir
 MODEL_DIR  = FLAGS.model_dir
 VERSION     = FLAGS.version
+SUBDATA    = FLAGS.subdata
+
 fjs = open ('utils/subdata.json', "r")
 JSON = json.loads(fjs.read())
 SUBDATA_KEYS=[key for key in JSON.keys()]
