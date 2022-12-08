@@ -89,6 +89,8 @@ EOF
         
         cat >> $slurmshell << EOF
 #!/bin/bash
+source /group/clas12/packages/setup.csh
+module load clas12/pro
 clas12root -b -q "pi0_readHipo.C(\"${hipo}\",\"${raw_out}\",$beamE,$nEvents,$hipo_is_mc)"
 clas12root -b -q "pi0_preprocess_${preprocess}.C(\"${raw_out}\",\"${preprocess_out}\")"
 echo "Done"
