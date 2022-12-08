@@ -1,4 +1,5 @@
 import argparse
+import json
 import catboost
 from catboost import CatBoostClassifier
 import ROOT
@@ -13,6 +14,7 @@ parser.add_argument('--raw_data_dir' , type=str, default = "/volatile/clas12/use
 parser.add_argument('--preprocess_data_dir' , type=str, default = "/volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/preprocess_catboost", help="Location of preprocessed ROOT files for predicting [default: /volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/preprocess_catboost]")
 parser.add_argument('--output_dir' , type=str, default= "/volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/postprocess_catboost", help="Location of output ROOT TFiles containing predictions [default: /volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/postprocess_catboost]")
 parser.add_argument('--model_dir', type=str, default='catboost', help='subdirectory in ./models/< > for model and plots [default: catboost]')
+parser.add_argument('--subdata' , type=str, default="all" ,help="Specifies the subset of data files to use for predicting [default: all] (SEE ./utils/subdata.json FOR OPTIONS)")
 parser.add_argument('--version' , type=str, default="MC" , help="Type of dataset (MC or nSidis) [default: MC]")
 
 FLAGS = parser.parse_args()
@@ -21,6 +23,10 @@ PREPROCESS_DATA_DIR    = FLAGS.preprocess_data_dir
 OUTPUT_DIR  = FLAGS.output_dir
 MODEL_DIR  = FLAGS.model_dir
 VERSION     = FLAGS.version
+fjs = open ('utils/subdata.json', "r")
+JSON = json.loads(fjs.read())
+SUBDATA_KEYS=[key for key in JSON.keys()]
+assert(SUBDATA=="all" or SUBDATA in SUBDATA_KEYS)
 
 MODEL_DIR="models/"+MODEL_DIR
 MODEL_FILE=MODEL_DIR+"/catboost_model"
@@ -40,11 +46,21 @@ def load_files():
 
     for file in os.listdir(RAW_DATA_DIR):
         if (file.endswith(".root") and VERSION in file):
+            foundFile=False
+            if(SUBDATA!="all"):
+                for RUN in JSON[SUBDATA]:
+                    if RUN in file:
+                        foundFile=True
+            else:
+                foundFile=True
+            if(not foundFile):
+                continue
             RAW_FILES.append(RAW_DATA_DIR+"/"+file)
             PREPROCESSED_FILES.append(PREPROCESS_DATA_DIR+"/"+file+":PreProcessedEvents")
             POSTPROCESSED_FILES.append(OUTPUT_DIR+"/"+file)
+            
     print("\n",len(RAW_FILES),"root files found for the ML predictions\n","-"*70,"\n")
-    
+
 def load_data(file):
 
     #load the tree

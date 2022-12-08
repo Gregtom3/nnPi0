@@ -7,6 +7,7 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 import shutil
+import json
 
 from sklearn.model_selection import train_test_split
 from catboost import CatBoostClassifier, Pool, metrics, cv
@@ -30,6 +31,7 @@ parser.add_argument('--max_leaves', type=int, default="64", help="Maximum number
 parser.add_argument('--min_data_in_leaf', type=int, default="1", help="Minimum number of data for leaf to split [default: 1]")
 parser.add_argument('--train_size', type=float, default="0.75", help="Fraction of sample to use for training [default: 0.75]")
 parser.add_argument('--data_dir', type=str, default='./', help='directory with data [default: ./]')
+parser.add_argument('--subdata', type=str, default='all', help='Specifies the MC files to be used in training (for specifying inbending vs outbending sets) [default: all] (SEE ./utils/subdata.json FOR OPTIONS)')
 parser.add_argument('--model_dir' , type=str, default='catboost', help='subdirectory in ./models/< > for model and plots [default: catboost]')
 parser.add_argument('--make_plots', type=bool, default='false', help='create model performance plots in model_dir [default: false]')
 parser.add_argument('--seed' , type=int , default="42" , help="Random seed [default: 42]")
@@ -45,6 +47,7 @@ MAX_LEAVES = FLAGS.max_leaves
 MIN_DATA_IN_LEAF = FLAGS.min_data_in_leaf
 TRAIN_SIZE = FLAGS.train_size
 DATA_DIR = FLAGS.data_dir
+SUBDATA  = FLAGS.subdata
 SEED  = FLAGS.seed
 MODEL_DIR = FLAGS.model_dir
 MAKE_PLOTS = FLAGS.make_plots
@@ -82,6 +85,11 @@ BRANCH_NAMES = ['flag','ievent','nPhotons',
 FEATURE_LIST=BRANCH_NAMES[2:]
 
 
+fjs = open ('utils/subdata.json', "r")
+JSON = json.loads(fjs.read())
+SUBDATA_KEYS=[key for key in JSON.keys()]
+assert(SUBDATA=="all" or SUBDATA in SUBDATA_KEYS)
+
 MODEL_DIR = "./models/"+MODEL_DIR
 if os.path.exists(MODEL_DIR):
     shutil.rmtree(MODEL_DIR)
@@ -96,7 +104,15 @@ def get_data():
 
     for file in os.listdir(DATA_DIR):
         if (file.endswith(".root") and "MC" in file):
-            root_files.append(DATA_DIR+"/"+file+":PreProcessedEvents")
+            foundFile=False
+            if(SUBDATA!="all"):
+                for RUN in JSON[SUBDATA]:
+                    if RUN in file:
+                        foundFile=True
+            else:
+                foundFile=True
+            if(foundFile):
+                root_files.append(DATA_DIR+"/"+file+":PreProcessedEvents")
 
     print(len(root_files),"root files found for the ML train/test")
 
