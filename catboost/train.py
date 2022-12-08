@@ -95,7 +95,7 @@ def get_data():
     root_files = []
 
     for file in os.listdir(DATA_DIR):
-        if file.endswith(".root"):
+        if (file.endswith(".root") and "MC" in file):
             root_files.append(DATA_DIR+"/"+file+":PreProcessedEvents")
 
     print(len(root_files),"root files found for the ML train/test")
@@ -252,7 +252,6 @@ def make_fpr_curve(numeric_val_pool=0,model=0,FPR=0.01,myLabel=""):
     plt.title("FPR Curve ".format(appTitle))
     plt.xlim(0,1)
 
-    FPR = 0.03
     boundary = select_threshold(model, 
                                 curve=roc_curve_values,  
                                 FPR=FPR)
