@@ -88,7 +88,7 @@ $slurmshell
 EOF
         
         cat >> $slurmshell << EOF
-#!/bin/bash
+#!/bin/tcsh
 source /group/clas12/packages/setup.csh
 module load clas12/pro
 clas12root -b -q "pi0_readHipo.C(\"${hipo}\",\"${raw_out}\",$beamE,$nEvents,$hipo_is_mc)"
