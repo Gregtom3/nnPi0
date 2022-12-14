@@ -3,7 +3,7 @@ USERNAME="$USER"
 hl="--------------------------------------------------------------------------------------------------------------------------------------------"
 nFiles=5
 nEvents=1000000 # per file
-ana="MC" # either MC or nSidis
+ana="nSidis" # either MC or nSidis
 preprocess="catboost" # catboost or particleNet
 volatiledir=/volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML
 pwd=$PWD
@@ -63,7 +63,7 @@ do
     fi
 
     raw_out=$volatiledir"/raw/${ana}_${runNumber}.root"
-    preprocess_out=$volatiledir"/$preprocess/preprocess_pi0/$ana_$runNumber.root"
+    preprocess_out=$volatiledir"/$preprocess/preprocess_pi0/${ana}_${runNumber}.root"
 
     if [ $slurm ]; then 
     
