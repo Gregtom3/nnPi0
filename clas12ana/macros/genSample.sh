@@ -3,9 +3,10 @@ USERNAME="$USER"
 hl="--------------------------------------------------------------------------------------------------------------------------------------------"
 nFiles=5
 nEvents=1000000 # per file
-ana="nSidis" # either MC or nSidis
+ana="MC" # either MC or nSidis
 preprocess="catboost" # catboost or particleNet
 volatiledir=/volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML
+pwd=$PWD
 
 slurm=true
 logdir=""
@@ -62,8 +63,7 @@ do
     fi
 
     raw_out=$volatiledir"/raw/${ana}_${runNumber}.root"
-    preprocess_out=$volatiledir"/preprocess_${preprocess}/${ana}_${runNumber}.root"
-    
+    preprocess_out=$volatiledir"/$preprocess/preprocess_pi0/$ana_$runNumber.root"
 
     if [ $slurm ]; then 
     
@@ -91,8 +91,8 @@ EOF
 #!/bin/tcsh
 source /group/clas12/packages/setup.csh
 module load clas12/pro
-clas12root -b -q "pi0_readHipo.C(\"${hipo}\",\"${raw_out}\",$beamE,$nEvents,$hipo_is_mc)"
-clas12root -b -q "pi0_preprocess_${preprocess}.C(\"${raw_out}\",\"${preprocess_out}\")"
+clas12root -b -q $PWD/pi0_readHipo.C\(\"${hipo}\",\"${raw_out}\",$beamE,$nEvents,$hipo_is_mc\)
+clas12root -b -q $PWD/pi0_preprocess_${preprocess}.C\(\"${raw_out}\",\"${preprocess_out}\"\)
 echo "Done"
 EOF
         

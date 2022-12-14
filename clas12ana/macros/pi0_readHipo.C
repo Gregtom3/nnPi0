@@ -1,11 +1,11 @@
-#include "../src/SIDISParticle.h"
-#include "../src/SIDISParticlev1.h"
+#include "../src/SIDISParticle.C"
+#include "../src/SIDISParticlev1.C"
 typedef std::map<int, SIDISParticle*> type_map_part;
 #include "../src/PID.C"
 #include "../src/Constants.h"
-#include "../src/Kinematics.h"
-#include "../src/FiducialCuts.h"
-#include "../src/HipoBankInterface.h"
+#include "../src/Kinematics.C"
+#include "../src/FiducialCuts.C"
+#include "../src/HipoBankInterface.C"
 
 void DeleteParticlePointers(type_map_part& map){
   for(type_map_part::iterator it = map.begin(); it!=map.end(); ++it){
@@ -33,10 +33,12 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   double Q2;
   double nu;
   double W;
+  int _hel;
   const double Mp = 0.938272;
   const double Me = 0.000511;
   double s = pow(Mp,2)+pow(Me,2)+2*Mp*_electron_beam_energy;
-
+  int _run;
+  float _Pol;
   float reco_x;  // From Reconstructed Electron
   float reco_y;
   float reco_Q2;
@@ -124,6 +126,9 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   tree->Branch("Q2",&reco_Q2,"reco_Q2/F");
   tree->Branch("W",&reco_W,"reco_W/F");
   tree->Branch("y",&reco_y,"reco_y/F");
+  tree->Branch("hel",&_hel,"helicity/I");
+  tree->Branch("Pol",&_Pol,"Pol/F");
+  tree->Branch("run",&_run,"run/I");
   tree->Branch("ievent",&_ievent,"ievent/I");
   tree->Branch("nPart",&_nPart,"nPart/I");
   tree->Branch("nPartMatch",&_nPartMatch,"nPartMatch/I");
@@ -193,7 +198,11 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
 
   _chain.Add(hipoFile);
   _config_c12=_chain.GetC12Reader();
-  _config_c12->db()->turnOffQADB(); // Turn off QADB for Monte Carlo Analysis
+  // If not monte carlo, enforce QADB
+  // -------------------------------------
+  if(hipo_is_mc==true)
+    _config_c12->db()->turnOffQADB();
+  
 
   // Configure PIDs for final state
   // -------------------------------------
@@ -235,8 +244,11 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
     if(whileidx%10000==0 && whileidx!=0){
       std::cout << whileidx << " events read | " << _ievent*100.0/whileidx << "% passed event selection" << std::endl;
     }
-
+      
+    auto event = _c12->event();
+      
     whileidx++;
+      
     // Wipe both particleMaps clean
     // -------------------------------------
     DeleteParticlePointers(recoParticleMap);
@@ -245,8 +257,23 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
     // Get run specific information
     // -------------------------------------
     _runNumber = _c12->getBank(_idx_RUNconfig)->getInt(_irun,0);
-    _runNumber *= _c12->getBank(_idx_RUNconfig)->getFloat(_itorus,0); // Multiply run number by torus bending
-
+    _run = _runNumber;
+    if(hipo_is_mc)
+        _runNumber *= _c12->getBank(_idx_RUNconfig)->getFloat(_itorus,0); // Multiply run number by torus bending
+    // Get helicity
+    // -------------------------------------
+    
+    if(runHelicityFlip(_run)){
+        _hel = -event->getHelicity();
+    }
+    else
+    {
+        _hel = event->getHelicity();
+    }
+    // Get polarization
+    // -------------------------------------
+    _Pol = runPolarization(_run);
+      
     // Loop over reconstructed particles
     // -------------------------------------------------------
     auto particles=_c12->getDetParticles();
