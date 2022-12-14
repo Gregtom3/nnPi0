@@ -63,8 +63,18 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   float _phi[Nmax];
   float _vz[Nmax];
 
+  // MCParticle kinematics
+  float _truepx[Nmax];
+  float _truepy[Nmax];
+  float _truepz[Nmax];
+  float _trueE[Nmax];
+  float _truetheta[Nmax];
+  float _trueeta[Nmax];
+  float _truephi[Nmax];
+
   // Additional REC::Particle information
   int   _pid[Nmax];
+  int   _truepid[Nmax];
   float _beta[Nmax];
   float _chi2[Nmax];
 
@@ -122,6 +132,10 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
 
 
   // TTree Branching
+  tree->Branch("truex",&x,"truex/F");
+  tree->Branch("trueQ2",&Q2,"trueQ2/F");
+  tree->Branch("trueW",&W,"trueW/F");
+  tree->Branch("truey",&y,"truey/F");
   tree->Branch("x",&reco_x,"reco_x/F");
   tree->Branch("Q2",&reco_Q2,"reco_Q2/F");
   tree->Branch("W",&reco_W,"reco_W/F");
@@ -139,8 +153,16 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   tree->Branch("theta",&_theta,"theta[nPart]/F");
   tree->Branch("eta",&_eta,"eta[nPart]/F");
   tree->Branch("phi",&_phi,"phi[nPart]/F");
+  tree->Branch("truepx",&_truepx,"truepx[nPart]/F");
+  tree->Branch("truepy",&_truepy,"truepy[nPart]/F");
+  tree->Branch("truepz",&_truepz,"truepz[nPart]/F");
+  tree->Branch("trueE",&_trueE,"trueE[nPart]/F");
+  tree->Branch("truetheta",&_truetheta,"truetheta[nPart]/F");
+  tree->Branch("trueeta",&_trueeta,"trueeta[nPart]/F");
+  tree->Branch("truephi",&_truephi,"truephi[nPart]/F");
   tree->Branch("vz",&_vz,"vz[nPart]/F");
   tree->Branch("pid",&_pid,"pid[nPart]/I");
+  tree->Branch("truepid",&_truepid,"truepid[nPart]/I");
   tree->Branch("beta",&_beta,"beta[nPart]/F");
   tree->Branch("chi2",&_chi2,"chi2[nPart]/F");
   tree->Branch("MCmatch_flag",&_MCmatch_flag,"MCmatch_flag[nPart]/I");
@@ -556,8 +578,16 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
       _theta[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_theta); 
       _eta[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_eta); 
       _phi[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_phi); 
+      _truepx[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::evtgen_part_px);
+      _truepy[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::evtgen_part_py);
+      _truepz[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::evtgen_part_pz);
+      _trueE[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::evtgen_part_E);
+      _truetheta[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::evtgen_part_theta);
+      _trueeta[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::evtgen_part_eta);
+      _truephi[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::evtgen_part_phi);
       _vz[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_vz); 
       _pid[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::part_pid); 
+      _truepid[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::evtgen_part_pid); 
       _beta[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_beta); 
       _chi2[_nPart] = (it_reco->second)->get_property_float(SIDISParticle::part_chi2); 
       _pcal_sector[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::cal_sector_PCAL); 
