@@ -43,7 +43,7 @@ bool HipoBankInterface::loadBankData(const std::unique_ptr<clas12::clas12reader>
   // Grab necessary particle info
   // -------------------------------------------------------------
   int pindex = sp->get_property_int(SIDISParticle::part_pindex);
-
+  
   // -------------------------------------------------------------
   // Parse the REC::Calorimeter
   // -------------------------------------------------------------
@@ -181,7 +181,7 @@ bool HipoBankInterface::importDataToParticle(SIDISParticlev1 *sp)
   sp->set_property(SIDISParticle::cal_lw_PCAL, _lw_Cal[0]);
   sp->set_property(SIDISParticle::cal_lw_ECIN, _lw_Cal[1]);
   sp->set_property(SIDISParticle::cal_lw_ECOUT, _lw_Cal[2]);
-
+    
   sp->set_property(SIDISParticle::cal_du_PCAL, _du_Cal[0]);
   sp->set_property(SIDISParticle::cal_du_ECIN, _du_Cal[1]);
   sp->set_property(SIDISParticle::cal_du_ECOUT, _du_Cal[2]);
@@ -287,3 +287,4 @@ void HipoBankInterface::clear(){
     _z_DC[i]=0;
   }
 }
+

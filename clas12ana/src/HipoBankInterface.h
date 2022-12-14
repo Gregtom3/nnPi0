@@ -1,6 +1,4 @@
-#ifndef HipoBankInterface_h
-#define HipoBankInterface_h
-
+#pragma once
 /* Src Includes */
 #include "Constants.h"
 #include "Kinematics.h"
@@ -14,7 +12,9 @@ using namespace std;
 class HipoBankInterface{
  public:
   HipoBankInterface();
+  virtual ~HipoBankInterface() = default;
   HipoBankInterface(const std::unique_ptr<clas12::clas12reader>&);
+
 
 // Using the pindex from the SIDISParticle, attach extra bank info
   bool loadBankData(const std::unique_ptr<clas12::clas12reader>&, SIDISParticlev1 *);
@@ -78,4 +78,4 @@ class HipoBankInterface{
   float _z_DC[3]={0,0,0};
 
 };  
-#endif
+

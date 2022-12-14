@@ -1,6 +1,5 @@
 #include "Kinematics.h"
 #include "Constants.h"
-#include <math.h>
 using namespace std;
 
 double Kinematics::Q2(double E1, double E2, double cth){
