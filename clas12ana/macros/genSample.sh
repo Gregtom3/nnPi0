@@ -9,9 +9,7 @@ if [ $# -lt 2 ]; then
   After the raw TTrees are created (or if they are created already) this program preprocesses
   the raw TTrees into the input space of various ML algorithms
    - [MC/nSidis]: Specifies if we are analyzing MC or nSidis data
-   - [ML Method]: Options
-              -catboost
-              -particleNet
+   - [ML Method]: Options (catboost particleNet)            
    - [flags]:
               -o      (overwrite existing raw TTrees)
               -nFiles <INT> (maximum number of files per hipo directory: default=5)

@@ -230,7 +230,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   // -------------------------------------
   _config_c12->addExactPid(11,1);     // Exactly 1 electron
   _config_c12->addAtLeastPid(22,2);   // 2 or more photons
-
+  _config_c12->addAtLeastPid(211,1);   // 1 or more pi+
   
   // Add RUN::config bank
   // -------------------------------------
