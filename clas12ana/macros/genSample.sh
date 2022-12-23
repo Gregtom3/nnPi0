@@ -91,7 +91,7 @@ fi
 
 logdir=""
 slurmdir=""
-if [ $slurm ]; then 
+if [ $slurm == true ]; then 
     
         NOW=$( date '+%F_%H_%M_%S' )
         NOWdir=/farm_out/gmat/clas12analysis.sidis.data/rga/ML/$NOW
@@ -147,7 +147,7 @@ do
     raw_out=$volatiledir"/raw/${ana}_${runNumber}.root"
     preprocess_out=$volatiledir"/$preprocess/preprocess_pi0/${ana}_${runNumber}.root"
 
-    if [ $slurm ]; then 
+    if [ $slurm == true ]; then 
     
         slurmshell=${slurmdir}"/${ana}_${runNumber}_${preprocess}.sh"
         slurmslurm=${slurmdir}"/${ana}_${runNumber}_${preprocess}.slurm"
@@ -199,10 +199,14 @@ EOF
         echo "Reading hipo file $hipo"
         echo $hl
 
-        if [ -f "$raw_out" ]; then
-        echo "$raw_out exists...skipping..."
-        else
-        clas12root -b -q "pi0_readHipo.C(\"${hipo}\",\"${raw_out}\",$beamE,$nEvents,$hipo_is_mc)"
+	if [ -f "$raw_out" ]; then
+            if [ ! -z ${booleans["o"]} ]; then	
+		clas12root -b -q "pi0_readHipo.C(\"${hipo}\",\"${raw_out}\",$beamE,$nEvents,$hipo_is_mc)"
+	    else		
+		echo "$raw_out exists...skipping..."
+            fi
+	else
+	    clas12root -b -q "pi0_readHipo.C(\"${hipo}\",\"${raw_out}\",$beamE,$nEvents,$hipo_is_mc)"
         fi
 
         echo "Preprocessing hipo file $hipo"

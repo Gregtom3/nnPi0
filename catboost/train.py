@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import shutil
 import json
+import yaml
 
 from sklearn.model_selection import train_test_split
 from catboost import CatBoostClassifier, Pool, metrics, cv
@@ -33,6 +34,7 @@ parser.add_argument('--train_size', type=float, default="0.75", help="Fraction o
 parser.add_argument('--data_dir', type=str, default='./', help='directory with data [default: ./]')
 parser.add_argument('--subdata', type=str, default='all', help='Specifies the MC files to be used in training (for specifying inbending vs outbending sets) [default: all] (SEE ./utils/subdata.json FOR OPTIONS)')
 parser.add_argument('--model_dir' , type=str, default='catboost', help='subdirectory in ./models/< > for model and plots [default: catboost]')
+parser.add_argument('--input_yaml' , type=str, default="./input/input_noresonance.yaml",help="YAML file for model inputs [default: ./input/input_noresonance.yaml]")
 parser.add_argument('--make_plots', type=bool, default='false', help='create model performance plots in model_dir [default: false]')
 parser.add_argument('--seed' , type=int , default="42" , help="Random seed [default: 42]")
 
@@ -51,37 +53,11 @@ SUBDATA  = FLAGS.subdata
 SEED  = FLAGS.seed
 MODEL_DIR = FLAGS.model_dir
 MAKE_PLOTS = FLAGS.make_plots
-BRANCH_NAMES = ['flag','ievent','nPhotons',
-            'nHadrons',
-             'gE',
-             'gTheta',
-             'gPhi',
-             'g_pcal_e',
-             'g1_pcal_e',
-             'g2_pcal_e',
-             'g_pcal_du',
-             'g_pcal_dv',
-             'g_pcal_m2u',
-             'g_pcal_m2v',
-             'g_pcal_m3u',
-             'g_pcal_m3v',
-             'g1R',
-             'g2R',
-             'g1M',
-             'g2M',
-             'g1dE',
-             'g2dE',
-             'h1R',
-             'h2R',
-             'h1M',
-             'h2M',
-             'h1dE',
-             'h2dE',
-             'h1q',
-             'h2q',
-             'eR',
-             'eM',
-             'edE']
+INPUT_YAML = FLAGS.input_yaml
+with open(INPUT_YAML,'r') as file:
+    inyaml = yaml.safe_load(file)
+
+BRANCH_NAMES = ['flag','ievent']  +  inyaml["inputs"]
 FEATURE_LIST=BRANCH_NAMES[2:]
 
 
@@ -94,6 +70,9 @@ MODEL_DIR = "./models/"+MODEL_DIR
 if os.path.exists(MODEL_DIR):
     shutil.rmtree(MODEL_DIR)
 os.mkdir(MODEL_DIR)
+
+# Copy the YAML file into the MODEL DIR
+shutil.copyfile(INPUT_YAML,MODEL_DIR+"/inputs.yaml")
 
 if not os.path.exists(DATA_DIR):
     print("ERROR:",DATA_DIR,"not found...Aborting...")

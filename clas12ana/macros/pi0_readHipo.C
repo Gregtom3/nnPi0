@@ -332,6 +332,8 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
       if(pid==11){//only electron is assumed to be the scattered e
 	reco_Q2=_kin.Q2(_electron_beam_energy,E,_kin.cth(px,py,pz));
 	reco_y=_kin.y(_electron_beam_energy,E);
+        if(reco_y>0.8)
+            continue;
 	reco_nu=_kin.nu(_electron_beam_energy,E);
 	reco_W=_kin.W(reco_Q2,0.938272,reco_nu);
 	reco_x=_kin.x(reco_Q2,s,reco_y);

@@ -57,6 +57,10 @@ int pi0_preprocess_catboost(
     float g2_pcal_m3u = 0;
     float g2_pcal_m3v = 0;
     
+    float h1_pcal_m2u = 0;
+    float h1_pcal_m2v = 0;
+    float h2_pcal_m2u = 0;
+    float h2_pcal_m2v = 0;
     
     float h1R = 0; // the symbol 'h' signifies we are looking at hadron neighbors
     float h1M = 0;
@@ -105,6 +109,10 @@ int pi0_preprocess_catboost(
     tOut->Branch("g2_pcal_m2v",&g2_pcal_m2v,"g2_pcal_m2v/F");
     tOut->Branch("g2_pcal_m3u",&g2_pcal_m3u,"g2_pcal_m3u/F");
     tOut->Branch("g2_pcal_m3v",&g2_pcal_m3v,"g2_pcal_m3v/F");
+    tOut->Branch("h1_pcal_m2u",&h1_pcal_m2u,"h1_pcal_m2u/F");
+    tOut->Branch("h1_pcal_m2v",&h1_pcal_m2v,"h1_pcal_m2v/F");
+    tOut->Branch("h2_pcal_m2u",&h2_pcal_m2u,"h2_pcal_m2u/F");
+    tOut->Branch("h2_pcal_m2v",&h2_pcal_m2v,"h2_pcal_m2v/F");
     tOut->Branch("h1R",&h1R,"h1R/F");
     tOut->Branch("h2R",&h2R,"h2R/F");
     tOut->Branch("h1M",&h1M,"h1M/F");
@@ -256,6 +264,8 @@ int pi0_preprocess_catboost(
             std::vector<float> hM;
             std::vector<float> hdE;
             std::vector<float> hq;
+            std::vector<float> hh_pcal_m2u;
+            std::vector<float> hh_pcal_m2v;
             for(int j = 0 ; j < _nPart; j++){
                 if(i==j) continue;
                 int pid = tr_pid[j];
@@ -271,6 +281,8 @@ int pi0_preprocess_catboost(
                     hq.push_back(-1);
                 else
                     hq.push_back(0);
+                hh_pcal_m2u.push_back(tr_pcal_m2u[j]);
+                hh_pcal_m2v.push_back(tr_pcal_m2v[j]);
             }
             
             nPhotons=ig.size()+1; // Add one because of the photon of interest (one not looped over)
@@ -323,6 +335,18 @@ int pi0_preprocess_catboost(
             g1_pcal_m3v = gg_pcal_m3v[ig1];
             g2_pcal_m3v = gg_pcal_m3v[ig2];
             
+            if (nPhotons == 2) {
+                g2R = 0;
+                g2M = 0;
+                g2dE = 0;
+                g2_pcal_e = 0;
+                g2_pcal_du = 0;
+                g2_pcal_dv = 0;
+                g2_pcal_m2u = 0;
+                g2_pcal_m2v = 0;
+                g2_pcal_m3u = 0;
+                g2_pcal_m3v = 0;
+            }
             
             h1M = hM[ih1];
             h2M = hM[ih2];
@@ -330,7 +354,19 @@ int pi0_preprocess_catboost(
             h2q = hq[ih2];
             h1dE = hdE[ih2];
             h2dE = hdE[ih1];
+            h1_pcal_m2u = hh_pcal_m2u[ih1];
+            h2_pcal_m2u = hh_pcal_m2u[ih2];
+            h1_pcal_m2v = hh_pcal_m2v[ih1];
+            h2_pcal_m2v = hh_pcal_m2v[ih2];
             
+            if (nHadrons == 1) {
+                h2R = 0;
+                h2M = 0;
+                h2q = 0;
+                h2dE = 0;
+                h2_pcal_m2u = 0;
+                h2_pcal_m2v = 0;
+            }
             // Fill TTree
             tOut->Fill();
         }

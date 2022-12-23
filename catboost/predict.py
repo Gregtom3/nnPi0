@@ -7,6 +7,7 @@ import numpy as np
 import uproot
 import os 
 import array
+import yaml
 
 parser = argparse.ArgumentParser()
 
@@ -24,6 +25,11 @@ OUTPUT_DIR  = FLAGS.output_dir
 MODEL_DIR  = FLAGS.model_dir
 VERSION     = FLAGS.version
 SUBDATA    = FLAGS.subdata
+INPUT_YAML = MODEL_DIR+"/inputs.yaml"
+with open(INPUT_YAML,'r') as file:
+    inyaml = yaml.safe_load(file)
+
+BRANCH_NAMES = ['flag','ievent']  +  inyaml["inputs"]
 
 fjs = open ('utils/subdata.json', "r")
 JSON = json.loads(fjs.read())
@@ -67,49 +73,16 @@ def load_data(file):
 
     #load the tree
     tree = uproot.open(file)
-
-    #get the branch names
-    branch_names = ['flag','ievent','nPhotons',
-            'nHadrons',
-             'gE',
-             'gTheta',
-             'gPhi',
-             'g_pcal_e',
-             'g1_pcal_e',
-             'g2_pcal_e',
-             'g_pcal_du',
-             'g_pcal_dv',
-             'g_pcal_m2u',
-             'g_pcal_m2v',
-             'g_pcal_m3u',
-             'g_pcal_m3v',
-             'g1R',
-             'g2R',
-             'g1M',
-             'g2M',
-             'g1dE',
-             'g2dE',
-             'h1R',
-             'h2R',
-             'h1M',
-             'h2M',
-             'h1dE',
-             'h2dE',
-             'h1q',
-             'h2q',
-             'eR',
-             'eM',
-             'edE']
     
     # Column idx
-    idx_ievent = branch_names.index("ievent")
-    idx_flag   = branch_names.index("flag")
+    idx_ievent = BRANCH_NAMES.index("ievent")
+    idx_flag   = BRANCH_NAMES.index("flag")
 
     #load the branches into a numpy array
-    data = np.array([tree[b].array() for b in branch_names], dtype=np.float32).T
+    data = np.array([tree[b].array() for b in BRANCH_NAMES], dtype=np.float32).T
 
     #reshape the data into a N by (number of TBranches) matrix
-    data = data.reshape(data.shape[0],len(branch_names))
+    data = data.reshape(data.shape[0],len(BRANCH_NAMES))
     
     # Delete ievent and flag columns
     X =  np.delete(data,[idx_ievent,idx_flag],1)
@@ -143,9 +116,8 @@ def predict():
         post_tree = raw_tree.CloneTree(0)
         post_tree.SetName("PostProcessedEvents")
 
-        #listOfBranches is the list of desired branches
-        listOfBranches = ["hel","x","Q2","W","nPart","px","py","pz","E","pid","theta","eta","phi","MCmatch_parent_id","MCmatch_parent_pid"]
-    
+        listOfBranches = post_tree.GetListOfBranches()
+        
         #Get the list of branches
         branchList = post_tree.GetListOfBranches()
 
