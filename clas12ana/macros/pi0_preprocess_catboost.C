@@ -4,7 +4,7 @@ int index_of_element(std::vector<float> v, float key){
         return std::distance(v.begin(), itr);
     }
     else{
-        cout << "ERROR: index_of_element() cannot find key...Aborting..." << endl;
+        cout << "\nERROR: index_of_element() cannot find key...Aborting..." << endl;
         return -1;
     }
 }
@@ -288,10 +288,24 @@ int pi0_preprocess_catboost(
             nPhotons=ig.size()+1; // Add one because of the photon of interest (one not looped over)
             nHadrons=ih.size();
             
-            // If there was no other photons or no hadrons, continue
-            if(ig.size() == 0 || ih.size()==0){
+            // If there was no other photons, continue
+            if(ig.size() == 0){
 	      continue;
 	    }            
+            
+            // Pull the nearest particles by R
+            // R is the angle between the photon-of-interest and the neighbor particle
+            //   Pad neighbors with 0 if the number is less than two
+            g1R = gR.at(0); // There must be at least one other photon neighbor
+            if(gR.size()==1) g2R = gR.at(0); // Padding
+            else g2R = gR.at(1);
+            
+            if(hR.size()==0) // nHadrons = 0 , pad two neighbors with 0's
+                hR.push_back(0);
+            h1R = hR.at(0);
+            if(hR.size()==1) h2R = hR.at(0); // nHadrons = 1 , pad one neighbor with 0's
+            else h2R = hR.at(1);
+            
             
             // Sort the R vectors to find closest proximity neighbors to photon
             std::vector<float> gRclone = gR;
@@ -300,14 +314,6 @@ int pi0_preprocess_catboost(
             sort(gR.begin(),gR.end());
             sort(hR.begin(),hR.end());
             
-            // Pull the nearest particles by R (if only one particle, duplicate it)
-            g1R = gR.at(0);
-            if(gR.size()==1) g2R = gR.at(0);
-            else g2R = gR.at(1);
-            
-            h1R = hR.at(0);
-            if(hR.size()==1) h2R = hR.at(0);
-            else h2R = hR.at(1);
             
             // Get indecies of the closest particles
             int ig1 = index_of_element(gRclone,g1R);
@@ -335,7 +341,8 @@ int pi0_preprocess_catboost(
             g1_pcal_m3v = gg_pcal_m3v[ig1];
             g2_pcal_m3v = gg_pcal_m3v[ig2];
             
-            if (nPhotons == 2) {
+            if (nPhotons == 2) { // Only photon-of-interest and nearest neighbor
+                                 // Pad 0's to second nearest neighbor
                 g2R = 0;
                 g2M = 0;
                 g2dE = 0;
@@ -348,24 +355,35 @@ int pi0_preprocess_catboost(
                 g2_pcal_m3v = 0;
             }
             
-            h1M = hM[ih1];
-            h2M = hM[ih2];
-            h1q = hq[ih1];
-            h2q = hq[ih2];
-            h1dE = hdE[ih2];
-            h2dE = hdE[ih1];
-            h1_pcal_m2u = hh_pcal_m2u[ih1];
-            h2_pcal_m2u = hh_pcal_m2u[ih2];
-            h1_pcal_m2v = hh_pcal_m2v[ih1];
-            h2_pcal_m2v = hh_pcal_m2v[ih2];
-            
-            if (nHadrons == 1) {
+            if (nHadrons == 0) { // Pad 0's for two nearest neighbors
+                h1R = 0;
+                h1M = 0;
+                h1q = 0;
+                h1dE = 0;
+                h1_pcal_m2u = 0;
+                h1_pcal_m2v = 0;
+            }
+            else{
+                h1M = hM[ih1];
+                h1q = hq[ih1];
+                h1dE = hdE[ih2];
+                h1_pcal_m2u = hh_pcal_m2u[ih1];
+                h1_pcal_m2v = hh_pcal_m2v[ih1];
+            }
+            if (nHadrons <= 1) { // Pad 0's for second nearest neighbor
                 h2R = 0;
                 h2M = 0;
                 h2q = 0;
                 h2dE = 0;
                 h2_pcal_m2u = 0;
                 h2_pcal_m2v = 0;
+            }
+            else {
+                h2M = hM[ih2];
+                h2q = hq[ih2];
+                h2dE = hdE[ih1];
+                h2_pcal_m2u = hh_pcal_m2u[ih2];
+                h2_pcal_m2v = hh_pcal_m2v[ih2];
             }
             // Fill TTree
             tOut->Fill();

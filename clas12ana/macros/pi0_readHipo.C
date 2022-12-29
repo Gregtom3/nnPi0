@@ -396,10 +396,10 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
 
       // CUT Fiducial
       // --------------------------------------------------------------------------
-      if(_fiducial.FidCutParticle(_c12,11,sp) == false)
+      if(_fiducial.FidCutParticle(_c12,abs(_runNumber),sp) == false)
 	{delete sp; continue;}
       
-    
+      
       // Add SIDISParticle to the collection
       // --------------------------------------------------------------------------
 
