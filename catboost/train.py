@@ -33,8 +33,8 @@ parser.add_argument('--min_data_in_leaf', type=int, default="1", help="Minimum n
 parser.add_argument('--train_size', type=float, default="0.75", help="Fraction of sample to use for training [default: 0.75]")
 parser.add_argument('--data_dir', type=str, default='./', help='directory with data [default: ./]')
 parser.add_argument('--subdata', type=str, default='all', help='Specifies the MC files to be used in training (for specifying inbending vs outbending sets) [default: all] (SEE ./utils/subdata.json FOR OPTIONS)')
-parser.add_argument('--model_dir' , type=str, default='catboost', help='subdirectory in ./models/< > for model and plots [default: catboost]')
-parser.add_argument('--input_yaml' , type=str, default="./input/input_noresonance.yaml",help="YAML file for model inputs [default: ./input/input_noresonance.yaml]")
+parser.add_argument('--model_dir' , type=str, default='/work/clas12/users/gmat/nnPi0/catboost/models/model', help='full path to directory for model and plots [default: /work/clas12/users/gmat/nnPi0/catboost/models/model]')
+parser.add_argument('--input_yaml' , type=str, default="/work/clas12/users/gmat/nnPi0/catboost/input/input_noresonance.yaml",help="YAML file for model inputs [default: /work/clas12/users/gmat/nnPi0/catboost/input/input_noresonance.yaml]")
 parser.add_argument('--make_plots', type=bool, default='false', help='create model performance plots in model_dir [default: false]')
 parser.add_argument('--seed' , type=int , default="42" , help="Random seed [default: 42]")
 
@@ -66,7 +66,6 @@ JSON = json.loads(fjs.read())
 SUBDATA_KEYS=[key for key in JSON.keys()]
 assert(SUBDATA=="all" or SUBDATA in SUBDATA_KEYS)
 
-MODEL_DIR = "./models/"+MODEL_DIR
 if os.path.exists(MODEL_DIR):
     shutil.rmtree(MODEL_DIR)
 os.mkdir(MODEL_DIR)

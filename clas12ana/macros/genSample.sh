@@ -4,11 +4,14 @@
 ###########################################################################################
 PROJECT_NAME="pipluspi0_noresonance"
 NNPI0DIR=/work/clas12/users/gmat/nnPi0
+SCIPIODIR=/work/clas12/users/gmat/scipio
 ###########################################################################################
 ###########################################################################################
 ###########################################################################################
 USERNAME="$USER"
 pwd=$PWD
+nCPUs=4
+memPerCPU=4000
 ###########################################################################################
 ###########################################################################################
 ###########################################################################################
@@ -95,6 +98,34 @@ if [ ! -z ${flags["maxEvents"]} ]; then
     nEvents=${flags["maxEvents"]}
 fi
 
+slurm=true
+if [ ! -z ${booleans["noslurm"]} ]; then
+    slurm=false
+fi
+
+#######################################################################################################
+#######################################################################################################
+#######################################################################################################
+
+logdir=""
+slurmdir=""
+NOW=$( date '+%F_%H_%M_%S' )
+NOWdir=/farm_out/gmat/clas12analysis.sidis.data/rga/ML/$NOW
+if [ -d "${NOWdir}/" ]; then
+    rm -r ${NOWdir}
+fi
+mkdir ${NOWdir}
+logdir=$NOWdir"/log"
+slurmdir=$NOWdir"/slurm"
+if [ -d "${logdir}/" ]; then
+    rm -r ${logdir}
+fi
+if [ -d "${slurmdir}/" ]; then
+    rm -r ${slurmdir}
+fi
+mkdir ${logdir}
+mkdir ${slurmdir}
+
 #######################################################################################################
 #######################################################################################################
 #######################################################################################################
@@ -105,7 +136,7 @@ fi
 #######################################################################################################
 rawdir=/volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/raw
 volatiledir=/volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/projects/$PROJECT_NAME
-workdir=/work/clas12/users/gmat/scipio/projects/$PROJECT_NAME
+workdir=$SCIPIODIR/projects/$PROJECT_NAME
 printred "************ Creating /volatile directories for PROJECT_NAME=$PROJECT_NAME ************"
 if [ -d "${volatiledir}/" ]; then
     printred "\t ${volatiledir} already exists...continuing..."
@@ -137,7 +168,7 @@ else
 fi
 if [ -d "${workdir}/${MLmethod}" ]; then
     printred "\t ${workdir}/${MLmethod} already exists...rewriting..."
-    rm -r ${workdir}/${MLmethod}
+    rm -rf ${workdir}/${MLmethod}
 fi
 printgreen "\t mkdir ${workdir}/${MLmethod}"
 mkdir -p $workdir/$MLmethod
@@ -160,14 +191,14 @@ if [ $MLmethod == "catboost" ]; then
     cat >> $workdir/$MLmethod/train.sh << EOF
 cd $NNPI0DIR/catboost/
 python train.py --data_dir ${volatiledir}/${MLmethod}/MLinput \
---depth 12 \
+--depth 3 \
 --make_plots true \
 --subdata MC_inbending \
 --model_dir $CATBOOST_MODEL_INBENDING \
 --input_yaml $CATBOOST_INPUT_YAML
 
 python train.py --data_dir ${volatiledir}/${MLmethod}/MLinput \
---depth 12 \
+--depth 3 \
 --make_plots true \
 --subdata MC_outbending \
 --model_dir $CATBOOST_MODEL_OUTBENDING \
@@ -182,71 +213,144 @@ cd $NNPI0DIR/catboost/
 python predict.py \
     --version nSidis \
     --model_dir $CATBOOST_MODEL_INBENDING \
+    --preprocess_data_dir ${volatiledir}/${MLmethod}/MLinput \
     --subdata RGA_inbending \
     --output_dir ${volatiledir}/${MLmethod}/MLoutput
     
 python predict.py \
     --version nSidis \
     --model_dir $CATBOOST_MODEL_OUTBENDING \
+    --preprocess_data_dir ${volatiledir}/${MLmethod}/MLinput \
     --subdata RGA_outbending \
     --output_dir ${volatiledir}/${MLmethod}/MLoutput
     
 python predict.py \
     --version MC \
     --model_dir $CATBOOST_MODEL_INBENDING \
+    --preprocess_data_dir ${volatiledir}/${MLmethod}/MLinput \
     --subdata MC_inbending \
     --output_dir ${volatiledir}/${MLmethod}/MLoutput
     
 python predict.py \
     --version MC \
     --model_dir $CATBOOST_MODEL_OUTBENDING \
+    --preprocess_data_dir ${volatiledir}/${MLmethod}/MLinput \
     --subdata MC_outbending \
     --output_dir ${volatiledir}/${MLmethod}/MLoutput
     
 cd $pwd
 EOF
 
-
+    # Create runSidis.sh script
+    printgreen "\t Generating runSidis.sh file in $workdir/$MLmethod"
+    cat >> $workdir/$MLmethod/runSidis.sh << EOF
+#!/bin/bash
+files=($(basename $SCIPIODIR/macros/process/* ))
+script=\$1
+if [ \$# -lt 1 ]; then
+    echo "./runSidis.sh <PROCESS SCRIPT>"
+    echo -e "\n Please use one of the available files\n \t\$files"
+    exit 1
 fi
 
-#######################################################################################################
-#######################################################################################################
-#######################################################################################################
-
-
-slurm=true
-if [ ! -z ${booleans["noslurm"]} ]; then
-    slurm=false
+if [ ! -f "$SCIPIODIR/macros/process/\$script" ]; then
+    echo "Error: script not found."
+    echo -e "\n Please use one of the available files\n \t\$files"
+    exit 1
 fi
 
+cd $SCIPIODIR/macros/slurm
 
+chmod +x runSidis.sh
 
-logdir=""
-slurmdir=""
-if [ $slurm == true ]; then 
+./runSidis.sh nSidis catboost ${volatiledir}/${MLmethod}/MLoutput ${volatiledir}/${MLmethod}/postprocess \$script
+./runSidis.sh MC catboost ${volatiledir}/${MLmethod}/MLoutput ${volatiledir}/${MLmethod}/postprocess \$script
+
+cd $pwd
+EOF
     
-        NOW=$( date '+%F_%H_%M_%S' )
-        NOWdir=/farm_out/gmat/clas12analysis.sidis.data/rga/ML/$NOW
-        if [ -d "${NOWdir}/" ]; then
-            rm -r ${NOWdir}
-        fi
-        mkdir ${NOWdir}
-        logdir=$NOWdir"/log"
-        slurmdir=$NOWdir"/slurm"
-        if [ -d "${logdir}/" ]; then
-            rm -r ${logdir}
-        fi
-        if [ -d "${slurmdir}/" ]; then
-            rm -r ${slurmdir}
-        fi
-        mkdir ${logdir}
-        mkdir ${slurmdir}
+    # Create runBin.sh script
+    printgreen "\t Generating Binning.yaml file in $workdir/$MLmethod"
+    cp $SCIPIODIR/utils/Binning.yaml $workdir/$MLmethod/Binning.yaml
+    printgreen "\t Generating runBin.sh file in $workdir/$MLmethod"
+    cat >> $workdir/$MLmethod/runBin.sh << EOF
+#!/bin/bash
+clas12root -q '$SCIPIODIR/macros/analysis/binner.C("${volatiledir}/${MLmethod}/postprocess/nSidis*.root","${volatiledir}/${MLmethod}/postprocess_binned","$workdir/$MLmethod/Binning.yaml",0)'  # 0 --> nSidis
+clas12root -q '$SCIPIODIR/macros/analysis/binner.C("${volatiledir}/${MLmethod}/postprocess/MC*.root","${volatiledir}/${MLmethod}/postprocess_binned","$workdir/$MLmethod/Binning.yaml",1)'  # 1 --> MC
+
+EOF
+
+
+    # Create runBru.sh script
+    printgreen "\t Generating runBru.sh file in $workdir/$MLmethod"
+    cat >> $workdir/$MLmethod/runBru.sh << EOFmain
+#!/bin/bash                                                                                                                                                                  
+input_dir=${volatiledir}/${MLmethod}/postprocess_binned
+L=2
+threshold=0.9
+Mggmin=0.07
+Mggmax=0.22
+sidebandMin=0.22
+sidebandMax=0.4
+BRUFIT=$SCIPIODIR/brufit
+
+
+for dir in \$(find "\$input_dir" -mindepth 1 -maxdepth 1 -type d)
+do
+  for file in \$(find "\$dir" -name "*.root")
+  do
+    dirname=\$(basename \$dir)
+    filename=\$(basename \$file)
+    isMC=0
+    if [[ \$filename == MC* ]]; then
+        isMC=1
+    fi
+    programOutput=\$(clas12root -b -q -l /work/clas12/users/gmat/scipio/src/ReadTTrees.C\\(\\"\$file\\"\\))
+    ttrees=\${programOutput#*...}
+    ttrees=\${ttrees#?}
+    # Create slurm files
+    slurmshell=${slurmdir}"/\${dirname}_\${filename}_\${isMC}.sh"
+    slurmslurm=${slurmdir}"/\${dirname}_\${filename}_\${isMC}.slurm"
+    
+    touch \$slurmshell
+    touch \$slurmslurm
+    chmod +x \$slurmshell
+
+    cat >> \$slurmslurm << EOF
+#!/bin/bash
+#SBATCH --account=clas12
+#SBATCH --partition=production
+#SBATCH --mem-per-cpu=${memPerCPU}
+#SBATCH --job-name=job_\${dirname}_\${filename}_\${isMC}
+#SBATCH --cpus-per-task=${nCPUs}
+#SBATCH --time=24:00:00
+#SBATCH --output=${logdir}/\${dirname}_\${filename}_\${isMC}.out
+#SBATCH --error=${logdir}/\${dirname}_\${filename}_\${isMC}.err
+\$slurmshell
+EOF
+
+    cat >> \$slurmshell << EOF
+#!/bin/tcsh
+source /group/clas12/packages/setup.csh
+module load clas12/pro
+set ttrees = (\$ttrees)
+foreach tree (\\\$ttrees)
+do
+    /u/site/12gev_phys/2.4/Linux_CentOS7.7.1908-gcc9.2.0/root/6.20.04/bin/root \$BRUFIT/macros/LoadBru.C -b -q -l $SCIPIODIR/macros/analysis/bruana_pipluspi0.C\\(\\"\$input_dir\\",\\"\$file\\",\\"\\\$tree\\",\$L,\$threshold,\$Mggmin,\$Mggmax,\$sidebandMin,\$sidebandMax,\$isMC\\)
+done
+EOF
+
+    sbatch \$slurmslurm
+done
+done
+EOFmain
 fi
 
+#######################################################################################################
+#######################################################################################################
+#######################################################################################################
 
 
-nCPUs=4
-memPerCPU=4000
 versions=("nSidis" "MC")
 for ana in "${versions[@]}"
 do
