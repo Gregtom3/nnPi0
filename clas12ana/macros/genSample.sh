@@ -335,12 +335,15 @@ source /group/clas12/packages/setup.csh
 module load clas12/pro
 set ttrees = (\$ttrees)
 foreach tree (\\\$ttrees)
-do
     /u/site/12gev_phys/2.4/Linux_CentOS7.7.1908-gcc9.2.0/root/6.20.04/bin/root \$BRUFIT/macros/LoadBru.C -b -q -l $SCIPIODIR/macros/analysis/bruana_pipluspi0.C\\(\\"\$input_dir\\",\\"\$file\\",\\"\\\$tree\\",\$L,\$threshold,\$Mggmin,\$Mggmax,\$sidebandMin,\$sidebandMax,\$isMC\\)
-done
+end
 EOF
 
+    echo "Submitting job for TTrees in \$filename"
+    echo -e "\t \$ttrees"
     sbatch \$slurmslurm
+    echo -e "\n"
+    
 done
 done
 EOFmain
