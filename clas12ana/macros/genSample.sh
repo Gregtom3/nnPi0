@@ -2,7 +2,7 @@
 ###########################################################################################
 ###########################################################################################
 ###########################################################################################
-PROJECT_NAME="pipluspi0_noresonance"
+PROJECT_NAME="pipluspi0_noresonance_all"
 NNPI0DIR=/work/clas12/users/gmat/nnPi0
 SCIPIODIR=/work/clas12/users/gmat/scipio
 ###########################################################################################
@@ -172,7 +172,10 @@ if [ -d "${workdir}/${MLmethod}" ]; then
 fi
 printgreen "\t mkdir ${workdir}/${MLmethod}"
 mkdir -p $workdir/$MLmethod
-
+printgreen "\t mkdir ${workdir}/${MLmethod}/asymPlots"
+mkdir -p $workdir/$MLmethod/asymPlots
+printgreen "\t mkdir ${workdir}/${MLmethod}/binnedPlots"
+mkdir -p $workdir/$MLmethod/binnedPlots
 #######################################################################################################
 #######################################################################################################
 #######################################################################################################
@@ -183,9 +186,10 @@ if [ $MLmethod == "catboost" ]; then
     CATBOOST_INPUT_YAML=$workdir/$MLmethod/MLinputs.yaml
     CATBOOST_MODEL_INBENDING=$workdir/$MLmethod/model_inbending
     CATBOOST_MODEL_OUTBENDING=$workdir/$MLmethod/model_outbending
+    printgreen "\t Generating /volatile link in $workdir/$MLmethod"
+    ln -s $volatiledir/$MLmethod $workdir/$MLmethod/linkToVolatile
     printgreen "\t Generating MLinputs.yaml file in $workdir/$MLmethod"
     cp $NNPI0DIR/catboost/input/input_noresonance.yaml $workdir/$MLmethod/MLinputs.yaml
-    
     # Create the train.sh script
     printgreen "\t Generating train.sh file in $workdir/$MLmethod"
     cat >> $workdir/$MLmethod/train.sh << EOF
@@ -274,13 +278,12 @@ EOF
     cp $SCIPIODIR/utils/Binning.yaml $workdir/$MLmethod/Binning.yaml
     printgreen "\t Generating runBin.sh file in $workdir/$MLmethod"
     cat >> $workdir/$MLmethod/runBin.sh << EOF
-#!/bin/bash
-clas12root -q '$SCIPIODIR/macros/analysis/binner.C("${volatiledir}/${MLmethod}/postprocess/nSidis*.root","${volatiledir}/${MLmethod}/postprocess_binned","$workdir/$MLmethod/Binning.yaml",0)'  # 0 --> nSidis
-clas12root -q '$SCIPIODIR/macros/analysis/binner.C("${volatiledir}/${MLmethod}/postprocess/MC*.root","${volatiledir}/${MLmethod}/postprocess_binned","$workdir/$MLmethod/Binning.yaml",1)'  # 1 --> MC
-
+#!/bin/tcsh
+source /group/clas12/packages/setup.csh
+module load clas12/pro
+clas12root -q '$SCIPIODIR/macros/analysis/binner.C("$volatiledir/$MLmethod/postprocess/nSidis*.root","$volatiledir/$MLmethod/postprocess_binned","$SCIPIODIR/projects/$PROJECT_NAME/$MLmethod/Binning.yaml",0)'
+clas12root -q '$SCIPIODIR/macros/analysis/binner.C("$volatiledir/$MLmethod/postprocess/MC*.root","$volatiledir/$MLmethod/postprocess_binned","$SCIPIODIR/projects/$PROJECT_NAME/$MLmethod/Binning.yaml",1)'
 EOF
-
-
     # Create runBru.sh script
     printgreen "\t Generating runBru.sh file in $workdir/$MLmethod"
     cat >> $workdir/$MLmethod/runBru.sh << EOFmain
@@ -305,44 +308,48 @@ do
     if [[ \$filename == MC* ]]; then
         isMC=1
     fi
+    if [[ ! \$filename =~ ^(MC|nSidis) * ]]; then
+        continue
+    fi
     programOutput=\$(clas12root -b -q -l /work/clas12/users/gmat/scipio/src/ReadTTrees.C\\(\\"\$file\\"\\))
     ttrees=\${programOutput#*...}
     ttrees=\${ttrees#?}
-    # Create slurm files
-    slurmshell=${slurmdir}"/\${dirname}_\${filename}_\${isMC}.sh"
-    slurmslurm=${slurmdir}"/\${dirname}_\${filename}_\${isMC}.slurm"
     
-    touch \$slurmshell
-    touch \$slurmslurm
-    chmod +x \$slurmshell
+    echo "Submitting job for TTrees in \$filename"
+    echo -e "\t \$ttrees"
+    echo -e "\n"
+    
+    # Create slurm files
+    for ttree in "\${ttrees[@]}"
+    do
+        slurmshell=${slurmdir}"/\${dirname}_\${filename}_\${isMC}_\${ttree}.sh"
+        slurmslurm=${slurmdir}"/\${dirname}_\${filename}_\${isMC}_\${ttree}.slurm"
 
-    cat >> \$slurmslurm << EOF
+        touch \$slurmshell
+        touch \$slurmslurm
+        chmod +x \$slurmshell
+
+        cat >> \$slurmslurm << EOF
 #!/bin/bash
 #SBATCH --account=clas12
 #SBATCH --partition=production
 #SBATCH --mem-per-cpu=${memPerCPU}
-#SBATCH --job-name=job_\${dirname}_\${filename}_\${isMC}
+#SBATCH --job-name=job_\${dirname}_\${filename}_\${isMC}_\${ttree}
 #SBATCH --cpus-per-task=${nCPUs}
 #SBATCH --time=24:00:00
-#SBATCH --output=${logdir}/\${dirname}_\${filename}_\${isMC}.out
-#SBATCH --error=${logdir}/\${dirname}_\${filename}_\${isMC}.err
+#SBATCH --output=${logdir}/\${dirname}_\${filename}_\${isMC}_\${ttree}.out
+#SBATCH --error=${logdir}/\${dirname}_\${filename}_\${isMC}_\${ttree}.err
 \$slurmshell
 EOF
 
-    cat >> \$slurmshell << EOF
+        cat >> \$slurmshell << EOF
 #!/bin/tcsh
 source /group/clas12/packages/setup.csh
 module load clas12/pro
-set ttrees = (\$ttrees)
-foreach tree (\\\$ttrees)
-    /u/site/12gev_phys/2.4/Linux_CentOS7.7.1908-gcc9.2.0/root/6.20.04/bin/root \$BRUFIT/macros/LoadBru.C -b -q -l $SCIPIODIR/macros/analysis/bruana_pipluspi0.C\\(\\"\$input_dir\\",\\"\$file\\",\\"\\\$tree\\",\$L,\$threshold,\$Mggmin,\$Mggmax,\$sidebandMin,\$sidebandMax,\$isMC\\)
-end
+/u/site/12gev_phys/2.4/Linux_CentOS7.7.1908-gcc9.2.0/root/6.20.04/bin/root \$BRUFIT/macros/LoadBru.C -b -q -l $SCIPIODIR/macros/analysis/bruana_pipluspi0.C\\(\\"\$input_dir/\$dirname\\",\\"\$file\\",\\"\$ttree\\",\$L,\$threshold,\$Mggmin,\$Mggmax,\$sidebandMin,\$sidebandMax,\$isMC\\)
 EOF
 
-    echo "Submitting job for TTrees in \$filename"
-    echo -e "\t \$ttrees"
-    sbatch \$slurmslurm
-    echo -e "\n"
+        sbatch \$slurmslurm
     
 done
 done
