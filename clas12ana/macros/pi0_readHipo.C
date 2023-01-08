@@ -28,15 +28,16 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
 
   // Initialize important event information
   // --------------------------------------
-  double x;  // Monte Carlo
-  double y;
-  double Q2;
-  double nu;
-  double W;
+  float x;  // Monte Carlo
+  float y;
+  float Q2;
+  float nu;
+  float W;
   int _hel;
   const double Mp = 0.938272;
   const double Me = 0.000511;
   double s = pow(Mp,2)+pow(Me,2)+2*Mp*_electron_beam_energy;
+  int _runNumber = 0; // scales by Pol (for MC, inbending -> -11, outbending -> 11, nSidis, runNumber=run)
   int _run;
   float _Pol;
   float reco_x;  // From Reconstructed Electron
@@ -142,7 +143,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   tree->Branch("y",&reco_y,"reco_y/F");
   tree->Branch("hel",&_hel,"helicity/I");
   tree->Branch("Pol",&_Pol,"Pol/F");
-  tree->Branch("run",&_run,"run/I");
+  tree->Branch("run",&_runNumber,"run/I");
   tree->Branch("ievent",&_ievent,"ievent/I");
   tree->Branch("nPart",&_nPart,"nPart/I");
   tree->Branch("nPartMatch",&_nPartMatch,"nPartMatch/I");
@@ -238,7 +239,6 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   int _irun = _config_c12->getBankOrder(_idx_RUNconfig,"run");
   int _ievnum = _config_c12->getBankOrder(_idx_RUNconfig,"event");
   int _itorus = _config_c12->getBankOrder(_idx_RUNconfig,"torus");
-  int _runNumber = 0;
 
   // Establish CLAS12 event parser
   // -------------------------------------
@@ -463,14 +463,16 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
     
       int parentPID = mcparticles->getPid(parentID);
       int parentparentPID = mcparticles->getPid(parentparentID);
-
-      if(pid==11 && parentID==1){ // scattered electron
+        
+      if(pid==11 && parentID==0){ // scattered electron
 	Q2=_kin.Q2(_electron_beam_energy,E,_kin.cth(px,py,pz));
 	y=_kin.y(_electron_beam_energy,E);
 	nu=_kin.nu(_electron_beam_energy,E);
 	W=_kin.W(Q2,0.938272,nu);
 	x=_kin.x(Q2,s,y);
+    
       }
+      
       
       if(mcparticles->getType(idx)!=1) // Reject non-final state
 	{continue;} 
@@ -499,7 +501,6 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
       // Add SIDISParticle to the collection
       mcParticleMap.insert ( make_pair( sp->get_candidate_id() , sp) );   
     }
-  
      
     //
     //
@@ -567,8 +568,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
       }
       idx_e++;
     }
-      
-      
+       
     // Loop over all recoParticles and fill TTree
     _nPart=0;
     _nPartMatch=0;

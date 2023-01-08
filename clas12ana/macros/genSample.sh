@@ -2,7 +2,7 @@
 ###########################################################################################
 ###########################################################################################
 ###########################################################################################
-PROJECT_NAME="pipluspi0_noresonance_all"
+PROJECT_NAME="pipluspi0_noresonance_micro"
 NNPI0DIR=/work/clas12/users/gmat/nnPi0
 SCIPIODIR=/work/clas12/users/gmat/scipio
 ###########################################################################################
@@ -139,7 +139,8 @@ volatiledir=/volatile/clas12/users/gmat/clas12analysis.sidis.data/rga/ML/project
 workdir=$SCIPIODIR/projects/$PROJECT_NAME
 printred "************ Creating /volatile directories for PROJECT_NAME=$PROJECT_NAME ************"
 if [ -d "${volatiledir}/" ]; then
-    printred "\t ${volatiledir} already exists...continuing..."
+    printred "\t ${volatiledir} already exists...aborting..."
+    #exit
 else
     printgreen "\t mkdir ${volatiledir}"
     mkdir -p ${volatiledir}
@@ -278,9 +279,7 @@ EOF
     cp $SCIPIODIR/utils/Binning.yaml $workdir/$MLmethod/Binning.yaml
     printgreen "\t Generating runBin.sh file in $workdir/$MLmethod"
     cat >> $workdir/$MLmethod/runBin.sh << EOF
-#!/bin/tcsh
-source /group/clas12/packages/setup.csh
-module load clas12/pro
+#!/bin/bash
 clas12root -q '$SCIPIODIR/macros/analysis/binner.C("$volatiledir/$MLmethod/postprocess/nSidis*.root","$volatiledir/$MLmethod/postprocess_binned","$SCIPIODIR/projects/$PROJECT_NAME/$MLmethod/Binning.yaml",0)'
 clas12root -q '$SCIPIODIR/macros/analysis/binner.C("$volatiledir/$MLmethod/postprocess/MC*.root","$volatiledir/$MLmethod/postprocess_binned","$SCIPIODIR/projects/$PROJECT_NAME/$MLmethod/Binning.yaml",1)'
 EOF
@@ -308,7 +307,7 @@ do
     if [[ \$filename == MC* ]]; then
         isMC=1
     fi
-    if [[ ! \$filename =~ ^(MC|nSidis) * ]]; then
+    if [[ ! \$filename =~ ^(MC|nSidis).* ]]; then
         continue
     fi
     programOutput=\$(clas12root -b -q -l /work/clas12/users/gmat/scipio/src/ReadTTrees.C\\(\\"\$file\\"\\))
@@ -320,37 +319,46 @@ do
     echo -e "\n"
     
     # Create slurm files
-    for ttree in "\${ttrees[@]}"
+    for ttree in \${ttrees[@]}
     do
-        slurmshell=${slurmdir}"/\${dirname}_\${filename}_\${isMC}_\${ttree}.sh"
-        slurmslurm=${slurmdir}"/\${dirname}_\${filename}_\${isMC}_\${ttree}.slurm"
+        if [[ \$isMC == 0 ]]; then
+            versions=("all" "Fall2018_inbending" "Fall2018_outbending" "Spring2019_inbending")
+        else
+            versions=("all" "MC_inbending" "MC_outbending")
+        fi
+        for version in \${versions[@]}
+        do
+            slurmshell=${slurmdir}"/\${dirname}_\${filename}_\${isMC}_\${ttree}_\${version}.sh"
+            slurmslurm=${slurmdir}"/\${dirname}_\${filename}_\${isMC}_\${ttree}_\${version}.slurm"
 
-        touch \$slurmshell
-        touch \$slurmslurm
-        chmod +x \$slurmshell
+            touch \$slurmshell
+            touch \$slurmslurm
+            chmod +x \$slurmshell
 
-        cat >> \$slurmslurm << EOF
+            cat >> \$slurmslurm << EOF
 #!/bin/bash
 #SBATCH --account=clas12
 #SBATCH --partition=production
 #SBATCH --mem-per-cpu=${memPerCPU}
-#SBATCH --job-name=job_\${dirname}_\${filename}_\${isMC}_\${ttree}
+#SBATCH --job-name=job_\${dirname}_\${filename}_\${isMC}_\${ttree}_\${version}
 #SBATCH --cpus-per-task=${nCPUs}
 #SBATCH --time=24:00:00
-#SBATCH --output=${logdir}/\${dirname}_\${filename}_\${isMC}_\${ttree}.out
-#SBATCH --error=${logdir}/\${dirname}_\${filename}_\${isMC}_\${ttree}.err
+#SBATCH --output=${logdir}/\${dirname}_\${filename}_\${isMC}_\${ttree}_\${version}.out
+#SBATCH --error=${logdir}/\${dirname}_\${filename}_\${isMC}_\${ttree}_\${version}.err
 \$slurmshell
 EOF
 
-        cat >> \$slurmshell << EOF
+            cat >> \$slurmshell << EOF
 #!/bin/tcsh
 source /group/clas12/packages/setup.csh
 module load clas12/pro
-/u/site/12gev_phys/2.4/Linux_CentOS7.7.1908-gcc9.2.0/root/6.20.04/bin/root \$BRUFIT/macros/LoadBru.C -b -q -l $SCIPIODIR/macros/analysis/bruana_pipluspi0.C\\(\\"\$input_dir/\$dirname\\",\\"\$file\\",\\"\$ttree\\",\$L,\$threshold,\$Mggmin,\$Mggmax,\$sidebandMin,\$sidebandMax,\$isMC\\)
+/u/site/12gev_phys/2.4/Linux_CentOS7.7.1908-gcc9.2.0/root/6.20.04/bin/root \$BRUFIT/macros/LoadBru.C -b -q -l $SCIPIODIR/macros/analysis/bruana_pipluspi0.C\\(\\"\$input_dir/\$dirname\\",\\"\$file\\",\\"\$ttree\\",\$L,\$threshold,\$Mggmin,\$Mggmax,\$sidebandMin,\$sidebandMax,\$isMC,\\"\$version\\"\\)
+/u/site/12gev_phys/2.4/Linux_CentOS7.7.1908-gcc9.2.0/root/6.20.04/bin/root \$BRUFIT/macros/LoadBru.C -b -q -l $SCIPIODIR/macros/analysis/bruana_pipluspi0.C\\(\\"\$input_dir/\$dirname\\",\\"\$file\\",\\"\$ttree\\",\$L,1,\$Mggmin,\$Mggmax,\$sidebandMin,\$sidebandMax,\$isMC,\\"\$version\\"\\)
 EOF
 
-        sbatch \$slurmslurm
-    
+            sbatch \$slurmslurm
+        done
+    done
 done
 done
 EOFmain
