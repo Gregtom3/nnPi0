@@ -292,6 +292,8 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
     {
         _hel = event->getHelicity();
     }
+      
+    _fiducial.setTorusBending((int)_c12->getBank(_idx_RUNconfig)->getFloat(_itorus,0));
     // Get polarization
     // -------------------------------------
     _Pol = runPolarization(_run);

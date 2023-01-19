@@ -9,6 +9,7 @@ import seaborn as sns
 import shutil
 import json
 import yaml
+import random
 
 from sklearn.model_selection import train_test_split
 from catboost import CatBoostClassifier, Pool, metrics, cv
@@ -37,7 +38,7 @@ parser.add_argument('--model_dir' , type=str, default='/work/clas12/users/gmat/n
 parser.add_argument('--input_yaml' , type=str, default="/work/clas12/users/gmat/nnPi0/catboost/input/input_noresonance.yaml",help="YAML file for model inputs [default: /work/clas12/users/gmat/nnPi0/catboost/input/input_noresonance.yaml]")
 parser.add_argument('--make_plots', type=bool, default='false', help='create model performance plots in model_dir [default: false]')
 parser.add_argument('--seed' , type=int , default="42" , help="Random seed [default: 42]")
-
+parser.add_argument('--train_percent' , type=float, default="0.1", help="%-age of data per tree to use for training [default: 0.10]")
 
 
 FLAGS = parser.parse_args()
@@ -54,6 +55,7 @@ SEED  = FLAGS.seed
 MODEL_DIR = FLAGS.model_dir
 MAKE_PLOTS = FLAGS.make_plots
 INPUT_YAML = FLAGS.input_yaml
+TRAIN_PERCENTAGE=FLAGS.train_percent
 with open(INPUT_YAML,'r') as file:
     inyaml = yaml.safe_load(file)
 
@@ -107,15 +109,22 @@ def get_data():
     data = np.empty((0, len(branch_names)))
     
     FEATURE_LIST = branch_names[2:]
+
     # loop over the input tfiles
-    for tfile in root_files:
-    
+    for j,tfile in enumerate(root_files):
+        print(j+1,"of",len(root_files))
         # open uproot TTree
         tree = uproot.open(tfile)
 
         #load the branches into a numpy array
         temp_data = np.array([tree[b].array() for b in branch_names], dtype=np.float32).T
-
+        
+        #keep only n% of the data per tree
+        if(TRAIN_PERCENTAGE!=1):
+            num_points = int(np.ceil(temp_data.shape[0]*0.1))
+            idxs = random.sample(range(temp_data.shape[0]), num_points)
+            temp_data=temp_data[idxs]
+        
         # add the numpy array to the overall array
         data = np.vstack([data, temp_data])
 

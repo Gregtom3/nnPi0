@@ -1,0 +1,24 @@
+inputs:
+    - g1R
+    - g2R
+    - h1R
+    - h2R
+    - g_pcal_e
+    - gE
+    - g_pcal_m2u
+    - g_pcal_m2v
+    - g1_pcal_e
+    - g2_pcal_e
+    - g1_pcal_m2u
+    - g1_pcal_m2v
+    - g2_pcal_m2u
+    - g2_pcal_m2v
+    - h1_pcal_m2u
+    - h1_pcal_m2v
+    - h2_pcal_m2u
+    - h2_pcal_m2v
+    - h1dE
+    - h2dE
+    - gTheta
+    - eR
+    - edE

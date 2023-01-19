@@ -4,7 +4,8 @@ import catboost
 from catboost import CatBoostClassifier
 import ROOT
 import numpy as np
-import uproot
+import uproot3 as uproot
+import awkward as ak
 import os 
 import array
 import yaml
@@ -51,7 +52,7 @@ def load_model():
 
 def load_files():
 
-    for file in os.listdir(RAW_DATA_DIR):
+    for file in os.listdir(PREPROCESS_DATA_DIR):
         if (file.endswith(".root") and VERSION in file):
             foundFile=False
             if(SUBDATA!="all"):
@@ -62,6 +63,8 @@ def load_files():
                 foundFile=True
             if(not foundFile):
                 continue
+            if(not "5032" in file):
+                continue
             RAW_FILES.append(RAW_DATA_DIR+"/"+file)
             PREPROCESSED_FILES.append(PREPROCESS_DATA_DIR+"/"+file+":PreProcessedEvents")
             POSTPROCESSED_FILES.append(OUTPUT_DIR+"/"+file)
@@ -71,7 +74,8 @@ def load_files():
 def load_data(file):
 
     #load the tree
-    tree = uproot.open(file)
+    tree = uproot.open(file.split(":")[0]) # Because of uproot4 shenanigans
+    tree = tree["PreProcessedEvents"]
     
     # Column idx
     idx_ievent = BRANCH_NAMES.index("ievent")
@@ -110,11 +114,16 @@ def predict():
         # Open the existing TTree
         raw_tfile = ROOT.TFile(rawfile, "READ")
         raw_tree = raw_tfile.Get("RawEvents")
-
+#         u=uproot.open(rawfile)
+#         u=u["RawEvents"]
+#         pid=u.arrays("pid")
+#         print(pid[0])
+        #pid=ak.to_list(pid)
+        
+        #pid=u["pid"].array(library="np")
         post_tfile = ROOT.TFile(postfile,"RECREATE")
         post_tree = raw_tree.CloneTree(0)
         post_tree.SetName("PostProcessedEvents")
-
         listOfBranches = post_tree.GetListOfBranches()
         
         #Get the list of branches
@@ -134,19 +143,16 @@ def predict():
         # Fill the new branch with data
         print("Creating PostProcess Tree...",end="")
         k=0
+        
         for i in ievent:
             raw_tree.GetEntry(i)
-
-            nPart   = raw_tree.nPart
-            
-            for j in range(nPart):
-                pid = raw_tree.pid[j]
-                if(pid==22):
+            pid=np.array(raw_tree.pid)
+            for j,PID in enumerate(pid):
+                if(PID==22):
                     weights[j]=prob[k]
                     k+=1
                 else:
                     weights[j]=1
-        
             post_tree.Fill()
         # Write the updated tree to a new file
         print("Complete\n")

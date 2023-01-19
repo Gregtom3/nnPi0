@@ -2,7 +2,7 @@
 ###########################################################################################
 ###########################################################################################
 ###########################################################################################
-PROJECT_NAME="pipluspi0_noresonance_micro"
+PROJECT_NAME="pipluspi0_prelim"
 NNPI0DIR=/work/clas12/users/gmat/nnPi0
 SCIPIODIR=/work/clas12/users/gmat/scipio
 ###########################################################################################
@@ -93,7 +93,7 @@ else
     rungroup="${rungroup//-}"
 fi
 
-nEvents=1000000 # per file
+nEvents=1000000000 # per file
 if [ ! -z ${flags["maxEvents"]} ]; then
     nEvents=${flags["maxEvents"]}
 fi
@@ -278,11 +278,49 @@ EOF
     printgreen "\t Generating Binning.yaml file in $workdir/$MLmethod"
     cp $SCIPIODIR/utils/Binning.yaml $workdir/$MLmethod/Binning.yaml
     printgreen "\t Generating runBin.sh file in $workdir/$MLmethod"
-    cat >> $workdir/$MLmethod/runBin.sh << EOF
+    cat >> $workdir/$MLmethod/runBin.sh << EOFmain
 #!/bin/bash
-clas12root -q '$SCIPIODIR/macros/analysis/binner.C("$volatiledir/$MLmethod/postprocess/nSidis*.root","$volatiledir/$MLmethod/postprocess_binned","$SCIPIODIR/projects/$PROJECT_NAME/$MLmethod/Binning.yaml",0)'
-clas12root -q '$SCIPIODIR/macros/analysis/binner.C("$volatiledir/$MLmethod/postprocess/MC*.root","$volatiledir/$MLmethod/postprocess_binned","$SCIPIODIR/projects/$PROJECT_NAME/$MLmethod/Binning.yaml",1)'
+num=\$(grep -o "parentDirectory" Binning.yaml | wc -l)
+v=("MC" "nSidis")
+vidx=(1 0)
+for ((i=0; i < \$num; i++))
+do
+    for ((j=0; j < \${#vidx[@]}; j++))
+    do
+        version=\${v[\$j]}
+        isMC=\${vidx[\$j]}
+        
+        slurmshell=${slurmdir}"/binning_\${i}_\${j}.sh"
+        
+        slurmslurm=${slurmdir}"/binning_\${i}_\${j}.slurm"
+
+        touch \$slurmshell
+        touch \$slurmslurm
+        chmod +x \$slurmshell
+
+        cat >> \$slurmslurm << EOF
+#!/bin/bash
+#SBATCH --account=clas12
+#SBATCH --partition=production
+#SBATCH --mem-per-cpu=4000
+#SBATCH --job-name=job_binning_$version_\${i}_\${j}
+#SBATCH --cpus-per-task=4
+#SBATCH --time=24:00:00
+#SBATCH --output=${logdir}/binning_\${i}_\${j}.out
+#SBATCH --error=${logdir}/binning_\${i}_\${j}.err
+$slurmshell
 EOF
+        cat >> \$slurmshell << EOF
+source /group/clas12/packages/setup.csh
+module load clas12/pro
+clas12root -q '/work/clas12/users/gmat/scipio/macros/analysis/binner.C("${volatiledir}/${MLmethod}/postprocess/\$version*.root","${volatiledir}/${MLmethod}/postprocess_binned","${workdir}/${MLmethod}/Binning.yaml",\$isMC,\$i)'
+EOF
+    
+    sbatch \$slurmslurm
+    done
+done
+EOFmain
+
     # Create runBru.sh script
     printgreen "\t Generating runBru.sh file in $workdir/$MLmethod"
     cat >> $workdir/$MLmethod/runBru.sh << EOFmain
