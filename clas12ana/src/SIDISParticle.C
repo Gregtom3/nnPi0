@@ -233,7 +233,8 @@ std::pair<const std::string, SIDISParticle::PROPERTY_TYPE> SIDISParticle::get_pr
       return std::make_pair("evtgen_parentPID", SIDISParticle::type_int);
     case evtgen_part_parentparentPID:
       return std::make_pair("evtgen_parentparentPID", SIDISParticle::type_int);
-
+    case evtgen_part_parentparentID:
+      return std::make_pair("evtgen_parentparentID", SIDISParticle::type_int);
     default:
       std::cout << "SIDISParticle::get_property_info - Fatal Error - unknown prop_id " << prop_id << std::endl;
       return std::make_pair("-1", SIDISParticle::type_int);

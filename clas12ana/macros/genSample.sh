@@ -2,7 +2,7 @@
 ###########################################################################################
 ###########################################################################################
 ###########################################################################################
-PROJECT_NAME="pipluspi0_prelim"
+PROJECT_NAME="pipluspi0_prelim_v2"
 NNPI0DIR=/work/clas12/users/gmat/scipio/nnPi0
 SCIPIODIR=/work/clas12/users/gmat/scipio
 ###########################################################################################
@@ -308,7 +308,7 @@ do
 #SBATCH --time=24:00:00
 #SBATCH --output=${logdir}/binning_\${i}_\${j}.out
 #SBATCH --error=${logdir}/binning_\${i}_\${j}.err
-$slurmshell
+\$slurmshell
 EOF
         cat >> \$slurmshell << EOF
 source /group/clas12/packages/setup.csh

@@ -63,8 +63,6 @@ def load_files():
                 foundFile=True
             if(not foundFile):
                 continue
-            if(not "5032" in file):
-                continue
             RAW_FILES.append(RAW_DATA_DIR+"/"+file)
             PREPROCESSED_FILES.append(PREPROCESS_DATA_DIR+"/"+file+":PreProcessedEvents")
             POSTPROCESSED_FILES.append(OUTPUT_DIR+"/"+file)

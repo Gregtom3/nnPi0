@@ -14,10 +14,12 @@ void DeleteParticlePointers(type_map_part& map){
   }
   return;
 }
-int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/45nA_job_3053_2.hipo",
-		const char * outputFile = "MC_3053_2.root",
-		const double _electron_beam_energy = 10.6,
-		const int maxEvents = 10000,
+int pi0_readHipo(//const char * hipoFile = "/cache/clas12/rg-a/production/montecarlo/clasdis/fall2018/torus-1/v1/bkg45nA_10604MeV/45nA_job_3053_2.hipo",
+		 //const char * outputFile = "MC_3053_2.root",
+		 const char * hipoFile = "/cache/clas12/rg-a/production/recon/fall2018/torus-1/pass1/v1/dst/train/nSidis/nSidis_005032.hipo",
+		 const char * outputFile = "test.root",
+		 const double _electron_beam_energy = 10.6,
+		const int maxEvents = 1000000,
 		bool hipo_is_mc = true){
 
  
@@ -83,7 +85,9 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   int   _MCmatch_flag[Nmax];
   int   _MCmatch_parent_id[Nmax];
   int   _MCmatch_parent_pid[Nmax];
-  
+  int   _MCmatch_parentparent_id[Nmax];
+  int   _MCmatch_parentparent_pid[Nmax];
+    
   // REC::Calorimeter variables
   int   _pcal_sector[Nmax];
   int   _ecin_sector[Nmax];
@@ -169,6 +173,8 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
   tree->Branch("MCmatch_flag",&_MCmatch_flag,"MCmatch_flag[nPart]/I");
   tree->Branch("MCmatch_parent_id",&_MCmatch_parent_id,"MCmatch_parent_id[nPart]/I");
   tree->Branch("MCmatch_parent_pid",&_MCmatch_parent_pid,"MCmatch_parent_pid[nPart]/I");
+  tree->Branch("MCmatch_parentparent_id",&_MCmatch_parentparent_id,"MCmatch_parentparent_id[nPart]/I");
+  tree->Branch("MCmatch_parentparent_pid",&_MCmatch_parentparent_pid,"MCmatch_parentparent_pid[nPart]/I");
   tree->Branch("pcal_sector",&_pcal_sector,"pcal_sector[nPart]/I");
   tree->Branch("ecin_sector",&_ecin_sector,"ecin_sector[nPart]/I");
   tree->Branch("ecout_sector",&_ecout_sector,"ecout_sector[nPart]/I");
@@ -305,6 +311,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
     bool foundEle=false;
     bool found2g=false;
     for(unsigned int idx = 0 ; idx < particles.size() ; idx++){
+    
       // Extract each particle from event one-at-a-time
       // -------------------------------------------------------
       auto particle = particles.at(idx);
@@ -394,14 +401,17 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
       // --------------------------------------------------------------------------
       //    
       if(_hipoInterface.loadBankData(_c12, sp)==false)
-	{delete sp; continue;}
+	{
+	  delete sp; continue;
+      }
 
       // CUT Fiducial
       // --------------------------------------------------------------------------
       if(_fiducial.FidCutParticle(_c12,abs(_runNumber),sp) == false)
-	{delete sp; continue;}
-      
-      
+	{
+	  delete sp; continue;
+      }
+        
       // Add SIDISParticle to the collection
       // --------------------------------------------------------------------------
 
@@ -499,6 +509,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
       sp->set_property( SIDISParticle::evtgen_part_ID,   idx);
       sp->set_property( SIDISParticle::evtgen_part_parentID,  (int)parentID);
       sp->set_property( SIDISParticle::evtgen_part_parentPID, (int)parentPID);
+      sp->set_property( SIDISParticle::evtgen_part_parentparentID, (int)parentparentID);
       sp->set_property( SIDISParticle::evtgen_part_parentparentPID, (int)parentparentPID);
       // Add SIDISParticle to the collection
       mcParticleMap.insert ( make_pair( sp->get_candidate_id() , sp) );   
@@ -549,6 +560,7 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
 	  (it_reco->second)->set_property( SIDISParticle::part_parentPID , (it_mc->second)->get_property_int(SIDISParticle::evtgen_part_parentPID));
 	  (it_reco->second)->set_property( SIDISParticle::evtgen_part_parentID , (it_mc->second)->get_property_int(SIDISParticle::evtgen_part_parentID));
 	  (it_reco->second)->set_property( SIDISParticle::evtgen_part_parentPID , (it_mc->second)->get_property_int(SIDISParticle::evtgen_part_parentPID));
+      (it_reco->second)->set_property( SIDISParticle::evtgen_part_parentparentID , (it_mc->second)->get_property_int(SIDISParticle::evtgen_part_parentparentID));
 	  (it_reco->second)->set_property( SIDISParticle::evtgen_part_parentparentPID , (it_mc->second)->get_property_int(SIDISParticle::evtgen_part_parentparentPID));
 	}
       }
@@ -640,7 +652,8 @@ int pi0_readHipo(const char * hipoFile = "/cache/clas12/rg-a/production/montecar
       _MCmatch_flag[_nPart] = (it_reco->second)->get_property_int(SIDISParticle::evtgen_part_E)>0? 1:0;       
       _MCmatch_parent_pid[_nPart] =(it_reco->second)->get_property_int(SIDISParticle::evtgen_part_parentPID);       
       _MCmatch_parent_id[_nPart] =(it_reco->second)->get_property_int(SIDISParticle::evtgen_part_parentID);       
-
+      _MCmatch_parentparent_pid[_nPart] =(it_reco->second)->get_property_int(SIDISParticle::evtgen_part_parentparentPID);       
+      _MCmatch_parentparent_id[_nPart] =(it_reco->second)->get_property_int(SIDISParticle::evtgen_part_parentparentID);       
       if(_MCmatch_flag[_nPart]==1)
 	_nPartMatch++;
       _nPart++;

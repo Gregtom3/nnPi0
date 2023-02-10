@@ -26,11 +26,9 @@ type_map_part PID::applyCuts(type_map_part& map){
     else
       continue;
   }
-
   // Loop over particles within the particle map
-  for(type_map_part::iterator it = map.begin(); it!=map.end(); ++it){
+  for(type_map_part::iterator it = map.begin(); it!=map.end();){
     
-
     int pid = (it->second)->get_property_int(SIDISParticle::part_pid);
     float E = (it->second)->get_property_float(SIDISParticle::part_E);
     float px = (it->second)->get_property_float(SIDISParticle::part_px);  
@@ -39,7 +37,7 @@ type_map_part PID::applyCuts(type_map_part& map){
     float chi2 = (it->second)->get_property_float(SIDISParticle::part_chi2);
     float beta = (it->second)->get_property_float(SIDISParticle::part_beta);
     float vz = (it->second)->get_property_float(SIDISParticle::part_vz);
-
+      
     TLorentzVector part(px,py,pz,E);
     float angle_e = part.Angle(e.Vect())*180/3.14159265;
     
@@ -63,17 +61,17 @@ type_map_part PID::applyCuts(type_map_part& map){
     // Toss bad photon beta
     if(pid == 22 && (beta<0.9 || beta>1.1))
       deleteParticle=true;
-
+    
     // Delete the particle if needed
     if(deleteParticle){
       delete(it->second);
-      map.erase(it);
+      it=map.erase(it);
       continue;
     }
 
     // Insert particle into the retMap
     retMap.insert ( make_pair( (it->first) , (it->second)) );
-    
+    it++;
   }
   
   return retMap;

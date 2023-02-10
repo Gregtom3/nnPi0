@@ -2,7 +2,7 @@ import argparse
 import ROOT
 import pandas as pd
 import numpy as np
-import uproot
+import uproot3 as uproot
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split
 from catboost import CatBoostClassifier, Pool, metrics, cv
 from sklearn.metrics import accuracy_score
 import catboost
-from catboost.utils import get_confusion_matrix
+from catboost.utils import get_confusion_matrix, eval_metric
 from catboost.utils import get_roc_curve, select_threshold, get_fpr_curve
 
 plt.style.use('science')
@@ -93,11 +93,11 @@ def get_data():
                 foundFile=True
             if(foundFile):
                 root_files.append(DATA_DIR+"/"+file+":PreProcessedEvents")
-
+                
     print(len(root_files),"root files found for the ML train/test")
 
     #load the tree
-    tree = uproot.open(root_files[0])
+    tree = uproot.open(root_files[0].split(":")[0])
 
     #get the branch names
     branch_names = BRANCH_NAMES
@@ -113,8 +113,10 @@ def get_data():
     # loop over the input tfiles
     for j,tfile in enumerate(root_files):
         print(j+1,"of",len(root_files))
+        tree = uproot.open(tfile.split(":")[0]) # Because of uproot4 shenanigans
+        tree = tree["PreProcessedEvents"]
+
         # open uproot TTree
-        tree = uproot.open(tfile)
 
         #load the branches into a numpy array
         temp_data = np.array([tree[b].array() for b in branch_names], dtype=np.float32).T
@@ -240,7 +242,7 @@ def make_confusion_matrix(cf,
     
     plt.savefig(MODEL_DIR+"/confusion_matrix.pdf")
     
-def make_fpr_curve(numeric_val_pool=0,model=0,FPR=0.01,myLabel=""):
+def make_fpr_curve(numeric_val_pool=0,model=0,FPR=0.01,myLabel="",AUC=[1]):
     
     appTitle=""
     if(myLabel!=""):
@@ -279,8 +281,11 @@ def make_fpr_curve(numeric_val_pool=0,model=0,FPR=0.01,myLabel=""):
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.title("ROC Curve {}".format(appTitle))
+    
+    plt.text(0.25,0.54,"AUC = {}".format(np.round(AUC[0],3)))
+    
     if(appTitle):
-        plt.text(0.2,0.64,"TPR({}) = {}\% ".format(FPR,np.round(TPR*100,2)),fontsize=9)
+        plt.text(0.25,0.64,"TPR({}) = {}\% ".format(FPR,np.round(TPR*100,2)),fontsize=9)
         plt.plot([1,FPR],[TPR,TPR],color="red")
         plt.plot([FPR,FPR],[TPR,0],color="red")
         plt.savefig(MODEL_DIR+"/roc_curve_{}.pdf".format(myLabel))
@@ -292,9 +297,13 @@ def save_param_importance(model):
     dfPars = dfPars.sort_values(by="Importance",ascending=False)
     dfPars.to_csv(MODEL_DIR+"/param_importance.csv",index=False)
     
-def savefigs(numeric_val_pool, model):
-    
-    cm = get_confusion_matrix(model, numeric_val_pool)
+def savefigs(X_validation, y_validation, model):
+    numeric_val_pool = Pool(X_validation, y_validation)
+    p=np.array(model.predict_proba(X_validation)[:,1])
+    y=np.array(y_validation)
+    cm = np.array([[np.sum((p<0.9) & (y==0)) , np.sum((p>0.9) & (y==0)) ],[np.sum((p<0.9) & (y==1)) , np.sum((p>0.9) & (y==1))]])
+    AUC = eval_metric(p,y,'AUC')
+    #cm = get_confusion_matrix(model, numeric_val_pool)
     categories = ['Bkg','Signal']
     make_confusion_matrix(cm, 
                           categories=categories,
@@ -304,10 +313,10 @@ def savefigs(numeric_val_pool, model):
                          count=False,
                          title="Confusion Matrix\n on validation set")
     
-    make_fpr_curve(numeric_val_pool,model,0.01,"Strict")
-    make_fpr_curve(numeric_val_pool,model,0.03,"Medium")
-    make_fpr_curve(numeric_val_pool,model,0.1,"Loose")
-    make_fpr_curve(numeric_val_pool,model)
+    make_fpr_curve(numeric_val_pool,model,0.01,"Strict",AUC)
+    make_fpr_curve(numeric_val_pool,model,0.03,"Medium",AUC)
+    make_fpr_curve(numeric_val_pool,model,0.1,"Loose",AUC)
+    make_fpr_curve(numeric_val_pool,model,0,"",AUC)
     
 def train():
     
@@ -334,7 +343,7 @@ def train():
     model.save_model(MODEL_DIR+"/catboost_model")
     
     if(MAKE_PLOTS):
-        savefigs(numeric_val_pool,model)
+        savefigs(X_validation, y_validation ,model)
     
     save_param_importance(model)
         
